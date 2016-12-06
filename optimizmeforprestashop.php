@@ -12,6 +12,7 @@ if (!defined('_PS_VERSION_'))
 /**
  * Load all required files
  */
+
 $tabFoldersAutoload = array('classes');
 foreach ($tabFoldersAutoload as $folder){
     foreach (glob(dirname(__FILE__) ."/". $folder ."/*.php") as $filename){
@@ -28,46 +29,42 @@ class OptimizmeForPrestashop extends Module
     {
         $this->name = 'optimizmeforprestashop';
         $this->tab = 'front_office_features';
-        $this->version = '1.0';
-        $this->author = 'Clément JAYET';
+        $this->version = '1.0.0';
+        $this->author = 'Optimiz.me';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
-
-        // controllers du module
-        //$this->controllers = array('mesdevis');
 
         parent::__construct();
 
         $this->displayName = $this->l('Optimiz.me for Prestashop');
         $this->description = $this->l('SEO Optimization by Optimiz.me');
         $this->confirmUninstall = $this->l('Etes-vous sur de désintaller ce module ?');
-		
-		
-		
+
+
+
 		/////////////////////////////////////
 		// core ajax request
 		/////////////////////////////////////
-		
+
 		$optMeCore = new OptimizMeCore();
 		$optMeCore->rootAction();
-		
+
 		/////////////////////////////////////
 		// REDIRECTIONS
 		//  - if necessary, redirect
 		/////////////////////////////////////
-		
+
 		//$optMeRedirect = new OptimizMeRedirections();
-		
+
 		/////////////////////////////////////////
 		// FRONT-OFFICE
 		//  - add meta description if necessary
 		/////////////////////////////////////////
-		
+
 		//$optFo = new OptimizMeFO();
-		
-		
 
     }
+
 
 
     /**
@@ -109,6 +106,9 @@ class OptimizmeForPrestashop extends Module
      */
     public function hookDisplayTopColumn($params)
     {
+        $content = 'test';
+
+        /*
         $content = '';
         $tabProduits = array();
         $tabProduitsResultat = array();
@@ -177,12 +177,6 @@ class OptimizmeForPrestashop extends Module
                 $cart->save();
 
             }
-
-            /*
-            $content .= '<div class="alert alert-success ajax_add_to_cart_button" data-id-product="1" data-minimal_quantity="3" style="clear: both" rel="no-follow">
-                            Articles ajoutés au panier
-                        </div>';
-            */
 
             $content .= '<div class="alert alert-success" style="clear: both" rel="no-follow">
                             Articles ajoutés au panier
@@ -641,6 +635,8 @@ class OptimizmeForPrestashop extends Module
             // on affiche le point d'entrée du gros formulaire de configuration
             $content .=  $this->display(__FILE__, 'views/templates/front/point-entree.tpl');
         }
+
+        */
 
         return $content;
     }

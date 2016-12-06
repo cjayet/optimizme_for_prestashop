@@ -6,7 +6,6 @@
 	<description><![CDATA[SEO Optimization by Optimiz.me]]></description>
 	<author><![CDATA[Cl&eacute;ment JAYET]]></author>
 	<tab><![CDATA[front_office_features]]></tab>
-	<confirmUninstall><![CDATA[Etes-vous sur de désintaller ce module ?]]></confirmUninstall>
 	<is_configurable>0</is_configurable>
 	<need_instance>0</need_instance>
 	<limited_countries></limited_countries>

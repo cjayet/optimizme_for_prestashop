@@ -119,7 +119,7 @@ class OptimizMeActions
             $this->logWpObjectErrors($id_update);
 
             if (count($this->tabErrors) == 0){
-                $this->returnAjax['message'] = __('Contenu enregistrÈ avec succËs', 'optimizme');
+                $this->returnAjax['message'] = __('Contenu enregistr√© avec succ√®s', 'optimizme');
                 $this->returnAjax['id_post'] = $idPost;
                 $this->returnAjax['content'] = $newContent;
             }
@@ -137,7 +137,7 @@ class OptimizMeActions
         $boolModified = 0;
         if ($objData->url_reference == ''){
             // need more data
-            array_push($this->tabErrors, __('Aucun lien de rÈfÈrence trouvÈ, action annulÈe.', 'optimizme'));
+            array_push($this->tabErrors, __('Aucun lien de r√©f√©rence trouv√©, action annul√©e.', 'optimizme'));
         }
         else
         {
@@ -194,7 +194,7 @@ class OptimizMeActions
                 }
                 else {
                     // nothing done
-                    array_push($this->tabErrors, __('Aucun changement effectuÈ.', 'optimizme'));
+                    array_push($this->tabErrors, __('Aucun changement effectu√©.', 'optimizme'));
 
                 }
 
@@ -334,7 +334,7 @@ class OptimizMeActions
      */
     public function updateSlug($idPost, $objData){
         if ($idPost == ''){
-            array_push($this->tabErrors, __('Post non trouvÈ.', 'optimizme'));
+            array_push($this->tabErrors, __('Post non trouv√©.', 'optimizme'));
         }
         elseif (!isset($objData->new_slug) || $objData->new_slug == ''){
             // need more data
@@ -358,7 +358,7 @@ class OptimizMeActions
             $newURL = get_permalink($id_update);
 
             if ($previousURL == $newURL){
-                array_push($this->tabErrors, __("Les URL sont identiques et n'ont pas ÈtÈ changÈes.", 'optimizme'));
+                array_push($this->tabErrors, __("Les URL sont identiques et n'ont pas √©t√© chang√©es.", 'optimizme'));
             }
 
             // if no error: add redirect
@@ -376,10 +376,10 @@ class OptimizMeActions
 
                     switch ($resRedirection){
                         case 'insert' :
-                            $this->returnAjax['message'] = __('Redirection ajoutÈe : '. $newURL, 'optimizme');
+                            $this->returnAjax['message'] = __('Redirection ajout√©e : '. $newURL, 'optimizme');
                             break;
                         case 'update' :
-                            $this->returnAjax['message'] = __('Redirection mise ‡ jour : '. $newURL, 'optimizme');
+                            $this->returnAjax['message'] = __('Redirection mise √† jour : '. $newURL, 'optimizme');
                             break;
                         case 'same' :
                             $this->returnAjax['message'] = __('Nouvelle URL : '. $newURL, 'optimizme');
@@ -387,12 +387,12 @@ class OptimizMeActions
                     }
                 }
                 else {
-                    $this->returnAjax['message'] = __('Slug changÈ avec succËs', 'optimizme');
+                    $this->returnAjax['message'] = __('Slug chang√© avec succ√®s', 'optimizme');
                 }
 
 
                 $this->returnAjax['url'] = $newURL;
-                $this->returnAjax['message'] = __('Slug changÈ avec succËs', 'optimizme');
+                $this->returnAjax['message'] = __('Slug chang√© avec succ√®s', 'optimizme');
             }
 
         }
@@ -404,29 +404,28 @@ class OptimizMeActions
      * @param $objData
      */
     public function loadPostContent($idPost, $objData){
-        $post = get_post($idPost);
-        if ($post->ID != ''){
 
-            // check si le contenu est bien compris dans une balise "row" pour qu'il soit bien inclus dans l'Èditeur
-            if (trim($post->post_content) != ''){
-                if (!stristr($post->post_content, '<div class="row')){
-                    $post->post_content = '<div class="row ui-droppable"><div class="col-md-12 col-sm-12 col-xs-12 column"><div class="ge-content ge-content-type-tinymce" data-ge-content-type="tinymce">'. $post->post_content .'</div></div></div>';
+        $product = new Product($idPost);
+        if ($product->id != ''){
+
+            // check si le contenu est bien compris dans une balise "row" pour qu'il soit bien inclus dans l'√©diteur
+            if (trim($product->description[1]) != ''){
+                if (!stristr($product->description[1], '<div class="row')){
+                    $product->description[1] = '<div class="row ui-droppable"><div class="col-md-12 col-sm-12 col-xs-12 column"><div class="ge-content ge-content-type-tinymce" data-ge-content-type="tinymce">'. $product->description[1] .'</div></div></div>';
                 }
             }
 
-            // moteurs de recherche peuvent indexer le site ?
-
-            // load and return post data
-            $this->returnAjax['title'] = $post->post_title;
-            $this->returnAjax['content'] = $post->post_content;
-            $this->returnAjax['slug'] = $post->post_name;
-            $this->returnAjax['url'] = get_permalink($post->ID);
-            $this->returnAjax['publish'] = $post->post_status;
-            $this->returnAjax['meta_description'] = OptMeUtils::getMetaDescription($post);
-            $this->returnAjax['url_canonical'] = OptMeUtils::getCanonicalUrl($post);
-            $this->returnAjax['noindex'] = OptMeUtils::getMetaNoIndex($post);
-            $this->returnAjax['nofollow'] = OptMeUtils::getMetaNoFollow($post);
-            $this->returnAjax['blog_public'] = get_option('blog_public');
+            // load and return product data
+            $this->returnAjax['title'] = $product->name[1];                 // TODO pourquoi 1 ?
+            $this->returnAjax['content'] = $product->description[1];        // TODO pourquoi 1 ?
+            $this->returnAjax['slug'] = $product->link_rewrite[1];          // TODO pourquoi 1 ?
+            $this->returnAjax['url'] = OptMeUtils::getProductUrl($product->id);
+            $this->returnAjax['publish'] = $product->active;
+            $this->returnAjax['meta_description'] = $product->meta_description[1];
+            $this->returnAjax['url_canonical'] = 'todo';                            // TODO gestion url canonique
+            $this->returnAjax['noindex'] = 'todo';                                  // TODO gestion noindex
+            $this->returnAjax['nofollow'] = 'todo';                                 // TODO gestion nofollow
+            $this->returnAjax['blog_public'] = 1;
         }
     }
 
@@ -435,26 +434,33 @@ class OptimizMeActions
      * Load posts/pages
      */
     public function loadPostsPages($objData){
+        $productsReturn = array();
         $tabResults = array();
-        $postTypes = array(
-            __('Articles', 'optimizme') => 'post',
-            __('Pages', 'optimizme') => 'page'
-        );
 
-        foreach ($postTypes as $posttype){
-            $args = array(
-                'posts_per_page' => -1,
-                'post_type' => $posttype,
-                'post_status' => 'any'
-                );
-            $posts = get_posts($args);
+        // get languages in shop
+        $langs = OptMeUtils::getPrestashopLanguages();
 
-            if (is_array($posts) && count($posts)>0){
-                $tabResults[$posttype.'s'] = $posts;
+        if (is_array($langs) && count($langs)>0){
+            foreach ($langs as $lang){
+
+                // get products by lang
+                $allProducts = Product::getProducts($lang['id_lang'], 0, -1, 'name', 'ASC');
+                if (is_array($allProducts) && count($allProducts)>0){
+                    foreach ($allProducts as $product){
+                        if ($product['active'] == 1)        $status = 'En ligne';
+                        else                                $status = 'Hors ligne';
+                        $prodReturn = array(
+                            'ID' => $product['id_product'],
+                            'post_title' => $product['name'],
+                            'post_status' => $status
+                        );
+                        array_push($productsReturn, $prodReturn);
+                    }
+                }
             }
         }
 
-        //array_push($this->returnAjax['arborescence'], $tabResults);
+        $tabResults['posts'] = $productsReturn;
         $this->returnAjax['arborescence'] = $tabResults;
     }
 
@@ -483,7 +489,7 @@ class OptimizMeActions
     public function enableDisableRedirection($objData, $flagDisabled=0){
         if (!isset($objData->id_redirection) || $objData->id_redirection == ''){
             // need more data
-            array_push($this->tabErrors, __('Redirection non trouvÈe', 'optimizme'));
+            array_push($this->tabErrors, __('Redirection non trouv√©e', 'optimizme'));
         }
         else {
             $redirection = new OptimizMeRedirections();
@@ -498,7 +504,7 @@ class OptimizMeActions
     public function deleteRedirection($objData){
         if (!isset($objData->id_redirection) || $objData->id_redirection == ''){
             // need more data
-            array_push($this->tabErrors, __('Redirection non trouvÈe', 'optimizme'));
+            array_push($this->tabErrors, __('Redirection non trouv√©e', 'optimizme'));
         }
         else {
             $redirection = new OptimizMeRedirections();
@@ -637,14 +643,14 @@ class OptimizMeActions
 
 
     /**
-     * CrÈation d'un post
+     * Cr√©ation d'un post
      * @param $objData
      */
     public function createPost($objData){
         $flagError = 0;
         if (!isset($objData->post_type) || $objData->post_type == ''){
             // need more data
-            array_push($this->tabErrors, __('Type de contenu non dÈfini (article ou page)', 'optimizme'));
+            array_push($this->tabErrors, __('Type de contenu non d√©fini (article ou page)', 'optimizme'));
             $flagError = 1;
         }
 
@@ -655,7 +661,7 @@ class OptimizMeActions
         }
 
         if (!isset($objData->post_status) || $objData->post_status == ''){
-            array_push($this->tabErrors, __('Veuillez indiquer un Ètat', 'optimizme'));
+            array_push($this->tabErrors, __('Veuillez indiquer un √©tat', 'optimizme'));
             $flagError = 1;
         }
 
@@ -677,11 +683,11 @@ class OptimizMeActions
                 // load and return post data
                 $this->returnAjax['title'] = $objData->title;
                 $this->returnAjax['permalink'] = $permalink;
-                $this->returnAjax['message'] = __('CrÈation terminÈe avec succËs : ', 'optimizme') .'<a href="'. $permalink .'">'. $permalink .'</a>';
+                $this->returnAjax['message'] = __('Cr√©ation termin√©e avec succ√®s : ', 'optimizme') .'<a href="'. $permalink .'">'. $permalink .'</a>';
             }
             else {
                 // error creation
-                array_push($this->tabErrors, __('Erreur crÈation post', 'optimizme'));
+                array_push($this->tabErrors, __('Erreur cr√©ation post', 'optimizme'));
             }
         }
     }
@@ -697,7 +703,7 @@ class OptimizMeActions
         update_option('blog_public', $valueBlogPublic);
 
         $this->returnAjax['blog_public'] = $valueBlogPublic;
-        $this->returnAjax['message'] = __('Information enregistrÈe.', 'optimizme');
+        $this->returnAjax['message'] = __('Information enregistr√©e.', 'optimizme');
     }
 
 
