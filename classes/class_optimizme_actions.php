@@ -37,14 +37,21 @@ class OptimizMeActions
         }
         else
         {
-            $obj = array(
-                'ID'           => $idPost,
-                'post_title'   => $objData->new_title
-            );
+            if ( !is_numeric($idPost)){
+                // need more data
+                array_push($this->tabErrors, 'ID du produit non transmis');
+            }
+            else {
+                $product = new Product($idPost);
+                $product->name = $objData->new_title;
 
-            // Update the post into the database
-            $id_update = wp_update_post( $obj );
-            $this->logWpObjectErrors($id_update);
+                try {
+                    $product->save();
+                } catch (Exception $e) {
+                    // error
+                    array_push($this->tabErrors, $e->getMessage());
+                }
+            }
         }
     }
 
@@ -227,6 +234,40 @@ class OptimizMeActions
         }
     }
 
+
+    /**
+     * @param $idPost
+     * @param $objData
+     */
+    public function updateMetaTitle($idPost, $objData){
+        if (!isset($objData->meta_title))
+        {
+            // need more data
+            array_push($this->tabErrors, 'Meta title absent');
+        }
+        else
+        {
+            if ( !is_numeric($idPost)){
+                // need more data
+                array_push($this->tabErrors, 'ID du produit non transmis');
+            }
+            else {
+                $product = new Product($idPost);
+                $product->meta_title = $objData->meta_title;
+
+                try {
+                    $product->save();
+                } catch (Exception $e) {
+                    // error
+                    array_push($this->tabErrors, $e->getMessage());
+                }
+            }
+        }
+    }
+
+
+
+
     /**
      * @param $idPost
      * @param $objData
@@ -334,15 +375,32 @@ class OptimizMeActions
      */
     public function updateSlug($idPost, $objData){
         if ($idPost == ''){
-            array_push($this->tabErrors, __('Post non trouvé.', 'optimizme'));
+            array_push($this->tabErrors, 'Produit non trouvé.');
         }
         elseif (!isset($objData->new_slug) || $objData->new_slug == ''){
             // need more data
-            array_push($this->tabErrors, __('Veuillez saisir le slug', 'optimizme'));
+            array_push($this->tabErrors, 'Veuillez saisir le slug');
         }
         else
         {
+            $product = new Product($idPost);
+            $slugPropre = Tools::str2url($objData->new_slug);
+            $product->link_rewrite = $slugPropre;
+
+            try {
+                $product->save();
+
+                $this->returnAjax['url'] = OptMeUtils::getProductUrl($idPost);
+                $this->returnAjax['message'] = 'Slug changé avec succès';
+                $this->returnAjax['new_slug'] = $slugPropre;
+
+            } catch (Exception $e) {
+                array_push($this->tabErrors, "Erreur lors de l'enregistrement du slug : ". $e->getMessage());
+            }
+
+
             // get "current" URL
+            /*
             $previousURL = get_permalink($idPost);
 
             $obj = array(
@@ -394,6 +452,7 @@ class OptimizMeActions
                 $this->returnAjax['url'] = $newURL;
                 $this->returnAjax['message'] = __('Slug changé avec succès', 'optimizme');
             }
+            */
 
         }
     }
@@ -416,15 +475,17 @@ class OptimizMeActions
             }
 
             // load and return product data
-            $this->returnAjax['title'] = $product->name[1];                 // TODO pourquoi 1 ?
-            $this->returnAjax['content'] = $product->description[1];        // TODO pourquoi 1 ?
-            $this->returnAjax['slug'] = $product->link_rewrite[1];          // TODO pourquoi 1 ?
+            $this->returnAjax['title'] = $product->name[1];                             // TODO pourquoi 1 ?
+            $this->returnAjax['short_description'] = $product->description_short[1];    // TODO pourquoi 1 ?
+            $this->returnAjax['content'] = $product->description[1];                    // TODO pourquoi 1 ?
+            $this->returnAjax['slug'] = $product->link_rewrite[1];                      // TODO pourquoi 1 ?
             $this->returnAjax['url'] = OptMeUtils::getProductUrl($product->id);
             $this->returnAjax['publish'] = $product->active;
-            $this->returnAjax['meta_description'] = $product->meta_description[1];
-            $this->returnAjax['url_canonical'] = 'todo';                            // TODO gestion url canonique
-            $this->returnAjax['noindex'] = 'todo';                                  // TODO gestion noindex
-            $this->returnAjax['nofollow'] = 'todo';                                 // TODO gestion nofollow
+            $this->returnAjax['meta_description'] = $product->meta_description[1];      // TODO pourquoi 1 ?
+            $this->returnAjax['meta_title'] = $product->meta_title[1];                  // TODO pourquoi 1 ?
+            $this->returnAjax['url_canonical'] = 'todo';                                // TODO gestion url canonique
+            $this->returnAjax['noindex'] = 'todo';                                      // TODO gestion noindex
+            $this->returnAjax['nofollow'] = 'todo';                                     // TODO gestion nofollow
             $this->returnAjax['blog_public'] = 1;
         }
     }
@@ -447,14 +508,17 @@ class OptimizMeActions
                 $allProducts = Product::getProducts($lang['id_lang'], 0, -1, 'name', 'ASC');
                 if (is_array($allProducts) && count($allProducts)>0){
                     foreach ($allProducts as $product){
-                        if ($product['active'] == 1)        $status = 'En ligne';
-                        else                                $status = 'Hors ligne';
-                        $prodReturn = array(
-                            'ID' => $product['id_product'],
-                            'post_title' => $product['name'],
-                            'post_status' => $status
-                        );
-                        array_push($productsReturn, $prodReturn);
+                        if ($product['name'] != ''){
+                            if ($product['active'] == 1)        $status = 'En ligne';
+                            else                                $status = 'Hors ligne';
+                            $prodReturn = array(
+                                'ID' => $product['id_product'],
+                                'post_title' => $product['name'],
+                                'post_status' => $status
+                            );
+                            array_push($productsReturn, $prodReturn);
+                        }
+
                     }
                 }
             }
