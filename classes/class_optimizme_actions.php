@@ -29,30 +29,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateTitle($idPost, $objData){
-
-        if (!isset($objData->new_title) || $objData->new_title == '')
-        {
-            // need more data
-            array_push($this->tabErrors, __('Veuillez saisir "Nouveau titre"', 'optimizme'));
-        }
-        else
-        {
-            if ( !is_numeric($idPost)){
-                // need more data
-                array_push($this->tabErrors, 'ID du produit non transmis');
-            }
-            else {
-                $product = new Product($idPost);
-                $product->name = $objData->new_title;
-
-                try {
-                    $product->save();
-                } catch (Exception $e) {
-                    // error
-                    array_push($this->tabErrors, $e->getMessage());
-                }
-            }
-        }
+        OptMeUtils::saveProductField($idPost, 'name', $objData->new_title, $this, 1);
     }
 
     /**
@@ -131,8 +108,14 @@ class OptimizMeActions
                 $this->returnAjax['content'] = $newContent;
             }
         }
+    }
 
-
+    /**
+     * @param $idPost
+     * @param $objData
+     */
+    public function updateShortDescription($idPost, $objData){
+        OptMeUtils::saveProductField($idPost, 'description_short', $objData->new_short_description, $this);
     }
 
     /**
@@ -213,25 +196,8 @@ class OptimizMeActions
      * @param $idPost
      * @param $objData
      */
-    public function updateMetaDescription($idPost, $objData)
-    {
-        if (!isset($objData->meta_description))
-        {
-            // need more data
-            array_push($this->tabErrors, __('Veuillez saisir "Meta description"', 'optimizme'));
-        }
-        else
-        {
-            // get postmeta field
-            $metaKey = OptMeUtils::getPostMetaKeyFromType('metadescription');
-
-            if (OptMeUtils::doUpdatePostMeta($objData->meta_description, $idPost, $metaKey)){
-                $resUpdate = update_post_meta($idPost, $metaKey, $objData->meta_description);
-                if ($resUpdate == false){
-                    array_push($this->tabErrors, __('Erreur lors de la sauvegarde Meta Description : '. $metaKey, 'optimizme'));
-                }
-            }
-        }
+    public function updateMetaDescription($idPost, $objData){
+        OptMeUtils::saveProductField($idPost, 'meta_description', $objData->meta_description, $this);
     }
 
 
@@ -240,29 +206,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateMetaTitle($idPost, $objData){
-        if (!isset($objData->meta_title))
-        {
-            // need more data
-            array_push($this->tabErrors, 'Meta title absent');
-        }
-        else
-        {
-            if ( !is_numeric($idPost)){
-                // need more data
-                array_push($this->tabErrors, 'ID du produit non transmis');
-            }
-            else {
-                $product = new Product($idPost);
-                $product->meta_title = $objData->meta_title;
-
-                try {
-                    $product->save();
-                } catch (Exception $e) {
-                    // error
-                    array_push($this->tabErrors, $e->getMessage());
-                }
-            }
-        }
+        OptMeUtils::saveProductField($idPost, 'meta_title', $objData->meta_title, $this);
     }
 
 
@@ -397,63 +341,6 @@ class OptimizMeActions
             } catch (Exception $e) {
                 array_push($this->tabErrors, "Erreur lors de l'enregistrement du slug : ". $e->getMessage());
             }
-
-
-            // get "current" URL
-            /*
-            $previousURL = get_permalink($idPost);
-
-            $obj = array(
-                'ID'            => $idPost,
-                'post_name'     => $objData->new_slug
-            );
-
-            // Update the post into the database
-            $id_update = wp_update_post( $obj );
-            $this->logWpObjectErrors($id_update);
-
-            // get "new" URL
-            $newURL = get_permalink($id_update);
-
-            if ($previousURL == $newURL){
-                array_push($this->tabErrors, __("Les URL sont identiques et n'ont pas été changées.", 'optimizme'));
-            }
-
-            // if no error: add redirect
-            if (!$this->hasErrors())
-            {
-                // add redirection for hierarchical post type
-                // non hierarchical is already catched with the postmeta "_wp_old_slug"
-                $post = get_post($idPost);
-
-                if (is_post_type_hierarchical( $post->post_type) ){
-
-                    // add redirection from old url to new url
-                    $objRedirect = new OptimizMeRedirections();
-                    $resRedirection = $objRedirect->addRedirection($previousURL, $newURL);
-
-                    switch ($resRedirection){
-                        case 'insert' :
-                            $this->returnAjax['message'] = __('Redirection ajoutée : '. $newURL, 'optimizme');
-                            break;
-                        case 'update' :
-                            $this->returnAjax['message'] = __('Redirection mise à jour : '. $newURL, 'optimizme');
-                            break;
-                        case 'same' :
-                            $this->returnAjax['message'] = __('Nouvelle URL : '. $newURL, 'optimizme');
-                            break;
-                    }
-                }
-                else {
-                    $this->returnAjax['message'] = __('Slug changé avec succès', 'optimizme');
-                }
-
-
-                $this->returnAjax['url'] = $newURL;
-                $this->returnAjax['message'] = __('Slug changé avec succès', 'optimizme');
-            }
-            */
-
         }
     }
 
@@ -611,14 +498,6 @@ class OptimizMeActions
     public function setMsgReturn($msg, $typeResult='success'){
         $this->returnResult['result'] = $typeResult;
         $this->returnResult['message'] = $msg;
-
-        /*
-        if (is_array($tabData) && count($tabData)>0){
-            foreach ($tabData as $key => $value){
-                $this->returnResult[$key] = $value;
-            }
-        }
-        */
 
         // return results
         echo json_encode($this->returnResult);
@@ -785,7 +664,7 @@ class OptimizMeActions
      * Set blog name
      * @param $objData
      */
-    public function setBlogSite($objData){
+    public function setBlogTitle($objData){
         if (!isset($objData->site_title) || $objData->site_title == ''){
             // need more data
             array_push($this->tabErrors, __('Veuillez saisir le titre du site', 'optimizme'));

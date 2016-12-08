@@ -50,7 +50,8 @@ class OptimizMeCore {
                     // post
                     case 'set_post_title' :             $optAction->updateTitle($postId, $dataOptimizme); break;
                     //case 'set_post_content' :           $optAction->updateContent($postId, $dataOptimizme); break;
-                    //case 'set_post_metadescription' :   $optAction->updateMetaDescription($postId, $dataOptimizme); break;
+                    case 'set_post_shortdescription' :  $optAction->updateShortDescription($postId, $dataOptimizme); break;
+                    case 'set_post_metadescription' :   $optAction->updateMetaDescription($postId, $dataOptimizme); break;
                     case 'set_post_metatitle' :         $optAction->updateMetaTitle($postId, $dataOptimizme); break;
                     case 'set_post_slug' :              $optAction->updateSlug($postId, $dataOptimizme); break;
                     //case 'set_post_canonicalurl' :      $optAction->updateCanonicalUrl($postId, $dataOptimizme); break;
@@ -77,7 +78,7 @@ class OptimizMeCore {
                     //case 'set_create_post':             $optAction->createPost($dataOptimizme); break;
 
                     // blogs
-                    //case 'set_site_title':              $optAction->setBlogSite($dataOptimizme); break;
+                    //case 'set_site_title':              $optAction->setBlogTitle($dataOptimizme); break;
                     //case 'set_site_description':        $optAction->setBlogDescription($dataOptimizme); break;
                     //case 'set_site_blogpublic':         $optAction->setBlogPublicOrPrivate($dataOptimizme); break;
 
@@ -89,7 +90,7 @@ class OptimizMeCore {
                 if ($this->boolNoAction == 1)
                 {
                     // no action done
-                    $msg = __('Aucune action trouvée.', 'optimizme');
+                    $msg = 'Aucune action trouvée.';
                     $optAction->setMsgReturn($msg, 'danger');
                 }
                 else

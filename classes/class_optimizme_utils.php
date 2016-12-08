@@ -432,4 +432,39 @@ class OptMeUtils
         $url = $link->getProductLink($product);
         return $url;
     }
+
+
+    /**
+     * @param $idProduct
+     * @param $field : field to update
+     * @param $value : new value for the field
+     * @param $objAction : for error message
+     */
+    public static function saveProductField($idProduct, $field, $value, $objAction, $isRequired=0){
+
+        if ( !is_numeric($idProduct)){
+            // need more data
+            array_push($objAction->tabErrors, 'ID du produit non transmis');
+        }
+        elseif ( $isRequired == 1 && $value == ''){
+            // no empty
+            array_push($objAction->tabErrors, 'Ce champ ne doit pas être vide');
+        }
+        elseif (!isset($value)){
+            // need more data
+            array_push($objAction->tabErrors, 'Champ '. $field .' manquant');
+        }
+        else{
+            // all is ok
+            $product = new Product($idProduct);
+            $product->$field = $value;
+
+            try {
+                $product->save();
+            } catch (Exception $e) {
+                // error
+                array_push($objAction->tabErrors, $e->getMessage());
+            }
+        }
+    }
 }
