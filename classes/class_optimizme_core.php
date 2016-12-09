@@ -7,6 +7,7 @@ class OptimizMeCore {
 
     public $boolNoAction;
 
+
     /**
      * OptimizMeCore constructor.
      */
@@ -22,7 +23,8 @@ class OptimizMeCore {
         if (isset($_REQUEST['data_optme']) && $_REQUEST['data_optme'] != '')
         {
             // récupération des données
-            $dataOptimizme = json_decode(stripslashes($_REQUEST['data_optme']));
+            //$dataOptimizme = json_decode(stripslashes($_REQUEST['data_optme']));
+            $dataOptimizme = json_decode(($_REQUEST['data_optme']));
 
             // post id
             $postId = '';
@@ -39,7 +41,7 @@ class OptimizMeCore {
             if ($dataOptimizme->action == '')
             {
                 // no action specified
-                $msg = __('Aucune action de définie', 'optimizme');
+                $msg = 'Aucune action de définie';
                 $optAction->setMsgReturn($msg, 'danger');
             }
             else
@@ -49,16 +51,16 @@ class OptimizMeCore {
 
                     // post
                     case 'set_post_title' :             $optAction->updateTitle($postId, $dataOptimizme); break;
-                    //case 'set_post_content' :           $optAction->updateContent($postId, $dataOptimizme); break;
+                    case 'set_post_content' :           $optAction->updateContent($postId, $dataOptimizme); break;
                     case 'set_post_shortdescription' :  $optAction->updateShortDescription($postId, $dataOptimizme); break;
                     case 'set_post_metadescription' :   $optAction->updateMetaDescription($postId, $dataOptimizme); break;
                     case 'set_post_metatitle' :         $optAction->updateMetaTitle($postId, $dataOptimizme); break;
                     case 'set_post_slug' :              $optAction->updateSlug($postId, $dataOptimizme); break;
                     //case 'set_post_canonicalurl' :      $optAction->updateCanonicalUrl($postId, $dataOptimizme); break;
                     //case 'set_post_metarobots' :        $optAction->updateMetaRobots($postId, $dataOptimizme); break;
-                    //case 'set_post_status' :            $optAction->updatePostStatus($postId, $dataOptimizme); break;
-                    //case 'set_post_imgattributes' :     $optAction->updateAttributesTag($postId, $dataOptimizme, 'img'); break;
-                    //case 'set_post_hrefattributes' :    $optAction->updateAttributesTag($postId, $dataOptimizme, 'a'); break;
+                    case 'set_post_status' :            $optAction->updatePostStatus($postId, $dataOptimizme); break;
+                    case 'set_post_imgattributes' :     $optAction->updateAttributesTag($postId, $dataOptimizme, 'img'); break;
+                    case 'set_post_hrefattributes' :    $optAction->updateAttributesTag($postId, $dataOptimizme, 'a'); break;
 
                     // redirections
                     //case 'redirection_enable':          $optAction->enableDisableRedirection($dataOptimizme, 0); break;

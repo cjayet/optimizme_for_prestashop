@@ -38,15 +38,21 @@ class OptimizMeActions
      */
     public function updateContent($idPost, $objData){
 
-        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        //$images = Image::getImages(1, $idPost);
+        //OptMeUtils::nice($images); die;
 
-        if (!isset($objData->new_content) || $objData->new_content == '')
+        // no clean for grid editor
+        Configuration::updateValue('PS_USE_HTMLPURIFIER', 0);
+
+
+        if (!isset($objData->new_content))
         {
             // need more data
-            array_push($this->tabErrors, __('Veuillez saisir "Nouveau contenu"', 'optimizme'));
+            array_push($this->tabErrors, 'Contenu non trouvé.');
         }
         else{
-            // copy media files to wordpress media library
+
+            // copy media files to prestashop img cms
             $doc = new DOMDocument;
             libxml_use_internal_errors(true);
             $doc->loadHTML('<span>'.$objData->new_content.'</span>');
@@ -75,16 +81,21 @@ class OptimizMeActions
 
                     // check if already in media library
                     if (OptMeUtils::isFileMedia($urlFile)){
-                        $urlMediaWordpress = OptMeUtils::isMediaInLibrary($urlFile);
-                        if (!$urlMediaWordpress){
-                            $urlMediaWordpress = OptMeUtils::addMediaInLibrary($urlFile);
+                        $urlMediaPrestashop = OptMeUtils::isMediaInLibrary($urlFile);
+                        if (!$urlMediaPrestashop){
+                            $resAddImage = OptMeUtils::addMediaInLibrary($urlFile);
+                             if ( !$resAddImage ){
+                                 array_push($this->tabErrors, 'Erreur lors de la copie de l\'image.');
+                             }
+                             else {
+                                 $urlMediaPrestashop = $resAddImage;
+                             }
                         }
 
-                        // change HTML source: URI form Wordpress media library for this media
-                        $node->setAttribute($attr, $urlMediaWordpress);
+                        // change HTML source: URI form Prestashop media library for this media
+                        $node->setAttribute($attr, $urlMediaPrestashop);
                         $node->removeAttribute('data-mce-src');
                     }
-
                 }
             }
 
@@ -92,18 +103,11 @@ class OptimizMeActions
             $newContent = OptMeUtils::getHtmlFromDom($doc);
             $newContent = OptMeUtils::cleanHtmlFromEasycontent($newContent);
 
-            // save content in post/page
-            $obj = array(
-                'ID'            => $idPost,
-                'post_content'  => $newContent
-            );
-
-            // Update the post into the database
-            $id_update = wp_update_post( $obj, true );
-            $this->logWpObjectErrors($id_update);
+            // save product content
+            OptMeUtils::saveProductField($idPost, 'description', $newContent, $this);
 
             if (count($this->tabErrors) == 0){
-                $this->returnAjax['message'] = __('Contenu enregistré avec succès', 'optimizme');
+                $this->returnAjax['message'] = 'Contenu enregistré avec succès';
                 $this->returnAjax['id_post'] = $idPost;
                 $this->returnAjax['content'] = $newContent;
             }
@@ -122,21 +126,25 @@ class OptimizMeActions
      * @param $idPost
      * @param $objData
      */
-    public function updateAttributesTag($idPost, $objData, $tag){
+    public function updateAttributesTag($idProduct, $objData, $tag){
 
         $boolModified = 0;
+        if ( !is_numeric($idProduct)){
+            // need more data
+            array_push($this->tabErrors, 'ID du produit non transmis');
+        }
         if ($objData->url_reference == ''){
             // need more data
-            array_push($this->tabErrors, __('Aucun lien de référence trouvé, action annulée.', 'optimizme'));
+            array_push($this->tabErrors, 'Aucun lien de référence trouvé, action annulée.');
         }
         else
         {
-            $post = get_post($idPost);
-            if ($post->ID != '')
+            $product = new Product($idProduct);
+            if ($product->id != '')
             {
                 // load nodes
                 $doc = new DOMDocument;
-                $nodes = OptMeUtils::getNodesInDom($doc, $tag, $post->post_content);
+                $nodes = OptMeUtils::getNodesInDom($doc, $tag, $product->description[1]);
                 if ($nodes->length > 0) {
                     foreach ($nodes as $node) {
 
@@ -173,21 +181,18 @@ class OptimizMeActions
                     $newContent = OptMeUtils::getHtmlFromDom($doc);
 
                     // update
-                    $obj = array(
-                        'ID'            => $idPost,
-                        'post_content'  => $newContent
-                    );
-
-                    // Update the post into the database
-                    $id_update = wp_update_post( $obj );
-                    $this->logWpObjectErrors($id_update);
+                    $product->description = $newContent;
+                    try {
+                        $product->save();
+                    }
+                    catch (Exception $e){
+                        array_push($this->tabErrors, "Erreur optimisation tag : ". $e->getMessage());
+                    }
                 }
                 else {
                     // nothing done
-                    array_push($this->tabErrors, __('Aucun changement effectué.', 'optimizme'));
-
+                    array_push($this->tabErrors, 'Aucun changement effectué.');
                 }
-
             }
         }
     }
@@ -284,29 +289,8 @@ class OptimizMeActions
      * @param $objData
      */
     public function updatePostStatus($idPost, $objData){
-        if ($idPost != '') {
-            $post = get_post($idPost);
-
-            if ($post->ID != '') {
-
-                if ($objData->is_publish == 1)      $postStatus = 'publish';
-                else                                $postStatus = 'draft';
-                $obj = array(
-                    'ID'            => $idPost,
-                    'post_status'   => $postStatus
-                );
-
-                // Update the post into the database
-                $id_update = wp_update_post( $obj );
-                $this->logWpObjectErrors($id_update);
-            }
-            else {
-                array_push($this->tabErrors, __('Erreur lors du chargement du post', 'optimizme'));
-            }
-        }
-        else {
-            array_push($this->tabErrors, __('Aucun id de post', 'optimizme'));
-        }
+        if ( !isset($objData->is_publish) )         $objData->is_publish = 0;
+        OptMeUtils::saveProductField($idPost, 'active', $objData->is_publish, $this);
     }
 
 

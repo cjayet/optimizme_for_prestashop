@@ -36,10 +36,9 @@ class OptimizmeForPrestashop extends Module
 
         parent::__construct();
 
-        $this->displayName = $this->l('Optimiz.me for Prestashop');
-        $this->description = $this->l('SEO Optimization by Optimiz.me');
-        $this->confirmUninstall = $this->l('Etes-vous sur de désintaller ce module ?');
-
+        $this->displayName = $this->getTranslator()->trans('Optimiz.me for Prestashop', array(), 'Modules.OptimizMeForPrestashop');
+        $this->description = $this->getTranslator()->trans('SEO Optimization by Optimiz.me', array(), 'Modules.OptimizMeForPrestashop');
+        $this->confirmUninstall = $this->getTranslator()->trans('Etes-vous sur de désintaller ce module ?', array(), 'Modules.OptimizMeForPrestashop');
 
 
 		/////////////////////////////////////

@@ -96,16 +96,27 @@ class OptMeUtils
 
 
     /**
-     * Check if media exists in media library (search by title)
+     * Check if media exists in CMS media library
      * @param $urlFile
      * @return bool
      */
     public static function isMediaInLibrary($urlFile){
-        $basenameFile = basename($urlFile);
-        $media = get_page_by_title( $basenameFile, 'OBJECT', 'attachment' );
 
-        if ($media && $media->ID != '')     return wp_get_attachment_url($media->ID);
-        else                                return false;
+        if ( !stristr($urlFile, __PS_BASE_URI__) ){
+
+            // different: copy to prestashop
+            $basenameFile = basename($urlFile);
+            if (file_exists(_PS_IMG_DIR_ .'/cms/'. $basenameFile)){
+                return Tools::getHttpHost(true).__PS_BASE_URI__ .'img/cms/'.$basenameFile;
+            }
+            else{
+                return false;
+            }
+        }
+        else {
+            // same: image already in prestashop
+            return $urlFile;
+        }
     }
 
 
@@ -116,35 +127,26 @@ class OptMeUtils
      */
     public static function addMediaInLibrary($urlFile){
 
-        $nameFile = basename($urlFile);
+        $urlMedia = '';
 
-        $uploaddir = wp_upload_dir();
-        $uploadfile = $uploaddir['path'] . '/' . $nameFile;
+        $nameFile = basename($urlFile);
+        $uploaddir = _PS_IMG_DIR_ .'cms';
+        $uploadfile = $uploaddir . '/' . $nameFile;
 
         // write file in media
-        $contents = file_get_contents($urlFile);
-        $savefile = fopen($uploadfile, 'w');
-        fwrite($savefile, $contents);
-        fclose($savefile);
+        try {
+            $contents = file_get_contents($urlFile);
+            $savefile = fopen($uploadfile, 'w');
+            fwrite($savefile, $contents);
+            fclose($savefile);
+            $newUrl = Tools::getHttpHost(true).__PS_BASE_URI__ .'img/cms/'. $nameFile;
+            return $newUrl;
+        }
+        catch (Exception $e){
+            return false;
+        }
 
-        // add media in database
-        $wp_filetype = wp_check_filetype($nameFile, null );
-        $attachment = array(
-            'post_mime_type' => $wp_filetype['type'],
-            'post_title' => $nameFile,
-            'post_content' => '',
-            'post_status' => 'inherit'
-        );
-        $attach_id = wp_insert_attachment( $attachment, $uploadfile );
-        $urlMediaWordpress = wp_get_attachment_url($attach_id);
-
-        // add metadata
-        $imagenew = get_post( $attach_id );
-        $fullsizepath = get_attached_file( $imagenew->ID );
-        $attach_data = wp_generate_attachment_metadata( $attach_id, $fullsizepath );
-        wp_update_attachment_metadata( $attach_id, $attach_data );
-
-        return $urlMediaWordpress;
+        return $urlMedia;
     }
 
     /**
@@ -225,6 +227,16 @@ class OptMeUtils
         $currentMetaDescription = get_post_meta($idPost, $metaKey, true);
         if ($currentMetaDescription == $newMetaValue)       return false;
         else                                                return true;
+    }
+
+
+    /**
+     *
+     */
+    public static function getMediaFilesCMS(){
+        $cmsFolder = _PS_IMG_DIR_ .'/cms/';
+
+
     }
 
 
@@ -406,7 +418,7 @@ class OptMeUtils
         $content = str_replace('style=""', '', $content);
         $content = str_replace('class=""', '', $content);
 
-        return $content;
+        return trim($content);
     }
 
 
