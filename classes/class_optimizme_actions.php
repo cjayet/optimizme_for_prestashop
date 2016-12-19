@@ -484,6 +484,7 @@ class OptimizMeActions
         $this->returnResult['message'] = $msg;
 
         // return results
+        header("Access-Control-Allow-Origin: *");
         echo json_encode($this->returnResult);
     }
 
@@ -501,6 +502,7 @@ class OptimizMeActions
         }
 
         // return results
+        header("Access-Control-Allow-Origin: *");
         echo json_encode($this->returnResult);
     }
 
