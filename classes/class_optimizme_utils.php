@@ -145,8 +145,6 @@ class OptMeUtils
         catch (Exception $e){
             return false;
         }
-
-        return $urlMedia;
     }
 
     /**
