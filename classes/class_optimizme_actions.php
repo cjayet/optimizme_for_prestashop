@@ -450,19 +450,6 @@ class OptimizMeActions
 
 
     /**
-     * Add errors to the object
-     * @param $id_update
-     */
-    public function logWpObjectErrors($id_update){
-        if (is_wp_error($id_update)) {
-            $errors = $id_update->get_error_messages();
-            foreach ($errors as $error) {
-                array_push($this->tabErrors, $error);
-            }
-        }
-    }
-
-    /**
      * Check if has error or not
      * @return bool
      */
@@ -626,13 +613,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function setBlogPublicOrPrivate($objData){
-        if (isset($objData->nosearchengine) || $objData->nosearchengine == 1)       $valueBlogPublic = 0;
-        else                                                                        $valueBlogPublic = 1;
-
-        update_option('blog_public', $valueBlogPublic);
-
-        $this->returnAjax['blog_public'] = $valueBlogPublic;
-        $this->returnAjax['message'] = __('Information enregistrée.', 'optimizme');
+        // wp
     }
 
 
@@ -640,9 +621,7 @@ class OptimizMeActions
      * Load options from site
      */
     public function loadSiteOptions(){
-        $this->returnAjax['site_title'] = get_option('blogname');
-        $this->returnAjax['site_description'] = get_option('blogdescription');
-        $this->returnAjax['site_is_public'] = get_option('blog_public');
+        // wp
     }
 
 
@@ -651,13 +630,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function setBlogTitle($objData){
-        if (!isset($objData->site_title) || $objData->site_title == ''){
-            // need more data
-            array_push($this->tabErrors, __('Veuillez saisir le titre du site', 'optimizme'));
-        }
-        else {
-            update_option('blogname', $objData->site_title);
-        }
+        // wp
     }
 
     /**
@@ -665,7 +638,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function setBlogDescription($objData){
-        update_option('blogdescription', $objData->site_description);
+        // wp
     }
 
 }

@@ -23,7 +23,6 @@ class OptimizMeCore {
         if (isset($_REQUEST['data_optme']) && $_REQUEST['data_optme'] != '')
         {
             // récupération des données
-            //$dataOptimizme = json_decode(stripslashes($_REQUEST['data_optme']));
             $dataOptimizme = json_decode(($_REQUEST['data_optme']));
 
             // post id
