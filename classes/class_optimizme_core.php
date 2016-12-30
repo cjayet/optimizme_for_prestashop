@@ -26,11 +26,11 @@ class OptimizMeCore {
             $dataOptimizme = json_decode(($_REQUEST['data_optme']));
 
             // post id
-            $postId = '';
-            if (is_numeric($dataOptimizme->url_cible))      $postId = $dataOptimizme->url_cible;
+            $elementId = '';
+            if (is_numeric($dataOptimizme->url_cible))      $elementId = $dataOptimizme->url_cible;
             else {
                 if (isset($dataOptimizme->id_post) && $dataOptimizme->id_post != ''){
-                    $postId = $dataOptimizme->id_post;
+                    $elementId = $dataOptimizme->id_post;
                 }
             }
 
@@ -49,17 +49,17 @@ class OptimizMeCore {
                 switch ($dataOptimizme->action){
 
                     // post
-                    case 'set_post_title' :             $optAction->updateTitle($postId, $dataOptimizme); break;
-                    case 'set_post_content' :           $optAction->updateContent($postId, $dataOptimizme); break;
-                    case 'set_post_shortdescription' :  $optAction->updateShortDescription($postId, $dataOptimizme); break;
-                    case 'set_post_metadescription' :   $optAction->updateMetaDescription($postId, $dataOptimizme); break;
-                    case 'set_post_metatitle' :         $optAction->updateMetaTitle($postId, $dataOptimizme); break;
-                    case 'set_post_slug' :              $optAction->updateSlug($postId, $dataOptimizme); break;
-                    //case 'set_post_canonicalurl' :      $optAction->updateCanonicalUrl($postId, $dataOptimizme); break;
-                    //case 'set_post_metarobots' :        $optAction->updateMetaRobots($postId, $dataOptimizme); break;
-                    case 'set_post_status' :            $optAction->updatePostStatus($postId, $dataOptimizme); break;
-                    case 'set_post_imgattributes' :     $optAction->updateAttributesTag($postId, $dataOptimizme, 'img'); break;
-                    case 'set_post_hrefattributes' :    $optAction->updateAttributesTag($postId, $dataOptimizme, 'a'); break;
+                    case 'set_post_title' :             $optAction->updateTitle($elementId, $dataOptimizme); break;
+                    case 'set_post_content' :           $optAction->updateContent($elementId, $dataOptimizme); break;
+                    case 'set_post_shortdescription' :  $optAction->updateShortDescription($elementId, $dataOptimizme); break;
+                    case 'set_post_metadescription' :   $optAction->updateMetaDescription($elementId, $dataOptimizme); break;
+                    case 'set_post_metatitle' :         $optAction->updateMetaTitle($elementId, $dataOptimizme); break;
+                    case 'set_post_slug' :              $optAction->updateSlug($elementId, $dataOptimizme); break;
+                    //case 'set_post_canonicalurl' :      $optAction->updateCanonicalUrl($elementId, $dataOptimizme); break;
+                    //case 'set_post_metarobots' :        $optAction->updateMetaRobots($elementId, $dataOptimizme); break;
+                    case 'set_post_status' :            $optAction->updatePostStatus($elementId, $dataOptimizme); break;
+                    case 'set_post_imgattributes' :     $optAction->updateAttributesTag($elementId, $dataOptimizme, 'img'); break;
+                    case 'set_post_hrefattributes' :    $optAction->updateAttributesTag($elementId, $dataOptimizme, 'a'); break;
 
                     // redirections
                     //case 'redirection_enable':          $optAction->enableDisableRedirection($dataOptimizme, 0); break;
@@ -67,13 +67,20 @@ class OptimizMeCore {
                     //case 'redirection_delete':          $optAction->deleteRedirection($dataOptimizme); break;
 
                     // load content
-                    case 'load_post_content' :          $optAction->loadPostContent($postId, $dataOptimizme); break;
+                    case 'load_post_content' :          $optAction->loadPostContent($elementId, $dataOptimizme); break;
                     case 'load_posts_pages':            $optAction->loadPostsPages($dataOptimizme); break;
                     //case 'load_lorem_ipsum':            $optAction->loadLoremIpsum(); break;
                     //case 'load_redirections':           $optAction->loadRedirections(); break;
-                    //case 'load_images_post':            $optAction->loadImagesFromPost($postId, $dataOptimizme); break;
-                    //case 'load_href_post':              $optAction->loadHrefFromPost($postId, $dataOptimizme); break;
+                    //case 'load_images_post':            $optAction->loadImagesFromPost($elementId, $dataOptimizme); break;
+                    //case 'load_href_post':              $optAction->loadHrefFromPost($elementId, $dataOptimizme); break;
                     //case 'load_site_options':           $optAction->loadSiteOptions(); break;
+
+
+                    // categories
+                    case 'load_categories':            $optAction->loadCategories(); break;
+                    case 'load_category_content':      $optAction->loadCategoryContent($elementId, $dataOptimizme); break;
+                    case 'set_category_name':          $optAction->setCategoryName($elementId, $dataOptimizme); break;
+
 
                     // create content
                     //case 'set_create_post':             $optAction->createPost($dataOptimizme); break;

@@ -195,24 +195,7 @@ class OptMeUtils
      */
     public static function getPostMetaKeyFromType($type)
     {
-        $metakey = '';
 
-        if (defined( 'YOAST_ENVIRONMENT' ))
-        {
-            // YOAST
-            if ($type == 'noindex')                 $metakey= '_yoast_wpseo_meta-robots-noindex';
-            elseif ($type == 'nofollow')            $metakey= '_yoast_wpseo_meta-robots-nofollow';
-            elseif ($type == 'metadescription')     $metakey= '_yoast_wpseo_metadesc';
-        }
-        else
-        {
-            // Optimiz.me
-            if ($type == 'noindex')                 $metakey= 'optimizme_meta-robots-noindex';
-            elseif ($type == 'nofollow')            $metakey= 'optimizme_meta-robots-nofollow';
-            elseif ($type == 'metadescription')     $metakey= 'optimizme_metadesc';
-        }
-
-        return $metakey;
     }
 
     /**
@@ -445,35 +428,39 @@ class OptMeUtils
 
 
     /**
-     * @param $idProduct
-     * @param $field : field to update
-     * @param $value : new value for the field
-     * @param $objAction : for error message
+     * @param $idElement
+     * @param $type
+     * @param $field
+     * @param $value
+     * @param $objAction
+     * @param int $isRequired
      */
-    public static function saveProductField($idProduct, $field, $value, $objAction, $isRequired=0){
+    public static function saveObjField($idElement, $type, $field, $value, $objAction, $isRequired=0){
 
-        if ( !is_numeric($idProduct)){
+        if ( !is_numeric($idElement)){
             // need more data
-            array_push($objAction->tabErrors, 'ID du produit non transmis');
+            array_push($objAction->tabErrors, 'ID product not sent');
         }
         elseif ( $isRequired == 1 && $value == ''){
             // no empty
-            array_push($objAction->tabErrors, 'Ce champ ne doit pas être vide');
+            array_push($objAction->tabErrors, 'This field is mandatory');
         }
         elseif (!isset($value)){
             // need more data
-            array_push($objAction->tabErrors, 'Champ '. $field .' manquant');
+            array_push($objAction->tabErrors, 'Field '. $field .' missing');
         }
         else{
+
             // all is ok
-            $product = new Product($idProduct);
-            $product->$field = $value;
+            if ($type == 'product')     $obj = new Product($idElement);
+            else                        $obj = new Category($idElement);
+            $obj->$field = $value;
 
             try {
-                $product->save();
+                $obj->save();
             } catch (Exception $e) {
                 // error
-                array_push($objAction->tabErrors, $e->getMessage());
+                array_push($objAction->tabErrors, 'CATCH '. $e->getMessage());
             }
         }
     }

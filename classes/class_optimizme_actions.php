@@ -29,7 +29,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateTitle($idPost, $objData){
-        OptMeUtils::saveProductField($idPost, 'name', $objData->new_title, $this, 1);
+        OptMeUtils::saveObjField($idPost, 'product', 'name', $objData->new_title, $this, 1);
     }
 
     /**
@@ -75,9 +75,11 @@ class OptimizMeActions
                 {
                     // url media in easycontent
                     $urlFile = $node->getAttribute($attr);
+                    /*
                     if(!(strpos($urlFile, 'http') === 0)){
                         $urlFile = 'http://localhost'. $urlFile;        // TODO enlever localhost
                     }
+                    */
 
                     // check if already in media library
                     if (OptMeUtils::isFileMedia($urlFile)){
@@ -104,7 +106,7 @@ class OptimizMeActions
             $newContent = OptMeUtils::cleanHtmlFromEasycontent($newContent);
 
             // save product content
-            OptMeUtils::saveProductField($idPost, 'description', $newContent, $this);
+            OptMeUtils::saveObjField($idPost, 'product', 'description', $newContent, $this);
 
             if (count($this->tabErrors) == 0){
                 $this->returnAjax['message'] = 'Contenu enregistré avec succès';
@@ -119,7 +121,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateShortDescription($idPost, $objData){
-        OptMeUtils::saveProductField($idPost, 'description_short', $objData->new_short_description, $this);
+        OptMeUtils::saveObjField($idPost, 'product', 'description_short', $objData->new_short_description, $this);
     }
 
     /**
@@ -202,7 +204,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateMetaDescription($idPost, $objData){
-        OptMeUtils::saveProductField($idPost, 'meta_description', $objData->meta_description, $this);
+        OptMeUtils::saveObjField($idPost, 'product', 'meta_description', $objData->meta_description, $this);
     }
 
 
@@ -211,7 +213,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateMetaTitle($idPost, $objData){
-        OptMeUtils::saveProductField($idPost, 'meta_title', $objData->meta_title, $this);
+        OptMeUtils::saveObjField($idPost, 'product', 'meta_title', $objData->meta_title, $this);
     }
 
 
@@ -223,33 +225,7 @@ class OptimizMeActions
      */
     public function updateCanonicalUrl($idPost, $objData)
     {
-        if (defined( 'YOAST_ENVIRONMENT' )){
-            // update with "YOAST SEO"
-
-            $metaKey = '_yoast_wpseo_canonical';
-            if (OptMeUtils::doUpdatePostMeta($objData->canonical_url, $idPost, $metaKey)){
-                $resUpdate = update_post_meta($idPost, $metaKey, $objData->canonical_url);
-                if ($resUpdate == false){
-                    array_push($this->tabErrors, __('Erreur lors de la sauvegarde url canonical pour YOAST', 'optimizme'));
-                }
-            }
-        }
-        else {
-            // update canonical url with "Optimiz.me"
-            $urlCanonical = esc_url_raw( $objData->canonical_url, array('http', 'https') );
-
-            $metaKey = 'optimizme_canonical';
-            if (OptMeUtils::doUpdatePostMeta($objData->canonical_url, $idPost, $metaKey)){
-                $resUpdate = update_post_meta($idPost, $metaKey, $objData->canonical_url);
-                if ($resUpdate == false){
-                    array_push($this->tabErrors, __('Erreur lors de la sauvegarde url canonical', 'optimizme'));
-                }
-                else {
-                    // OK
-                    array_push($this->tabSuccess, 'URL : ' . $urlCanonical);
-                }
-            }
-        }
+        // TODO
     }
 
     /**
@@ -257,31 +233,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateMetaRobots($idPost, $objData){
-        if ($idPost != ''){
-            $post = get_post($idPost);
-
-            if ($post->ID != ''){
-
-                // meta keys
-                $keyMetaNoIndex = OptMeUtils::getPostMetaKeyFromType('noindex');
-                $keyMetaNoFollow = OptMeUtils::getPostMetaKeyFromType('nofollow');
-
-                // update index/noindex
-                if ($objData->noindex == 1)             update_post_meta($idPost, $keyMetaNoIndex, 1);
-                else                                    delete_post_meta($idPost, $keyMetaNoIndex);
-
-                // update follow/nofollow
-                if ($objData->nofollow == 1)            update_post_meta($idPost, $keyMetaNoFollow, 1);
-                else                                    delete_post_meta($idPost, $keyMetaNoFollow);
-
-            }
-            else {
-                array_push($this->tabErrors, __('Erreur lors du chargement du post', 'optimizme'));
-            }
-        }
-        else {
-            array_push($this->tabErrors, __('Aucun id de post', 'optimizme'));
-        }
+        // TODO
     }
 
     /**
@@ -290,7 +242,7 @@ class OptimizMeActions
      */
     public function updatePostStatus($idPost, $objData){
         if ( !isset($objData->is_publish) )         $objData->is_publish = 0;
-        OptMeUtils::saveProductField($idPost, 'active', $objData->is_publish, $this);
+        OptMeUtils::saveObjField($idPost, 'product', 'active', $objData->is_publish, $this);
     }
 
 
@@ -360,6 +312,66 @@ class OptimizMeActions
             $this->returnAjax['blog_public'] = 1;
         }
     }
+
+
+    /**
+     * Load all categories
+     */
+    public function loadCategories(){
+
+        $tabResults = array();
+
+        // get languages in shop
+        $categories = Category::getCategories(false, true, false);
+
+        if (is_array($categories) && count($categories)){
+            foreach ($categories as $categoryLoop){
+
+                $categoryInfos = array(
+                    'id' => $categoryLoop['id_category'],
+                    'name' => $categoryLoop['name'],
+                    'description' => $categoryLoop['description'],
+                    'slug' => $categoryLoop['link_rewrite'],
+                    'publish' => $categoryLoop['active'],
+                    'id_shop' => $categoryLoop['id_shop'],
+                    'id_lang' => $categoryLoop['id_lang'],
+                );
+
+                array_push($tabResults, $categoryInfos);
+            }
+        }
+
+        $this->returnAjax['categories'] = $tabResults;
+    }
+
+
+    /**
+     * @param $elementId
+     * @param $objData
+     */
+    public function loadCategoryContent($elementId, $objData){
+        $tabCategory = array();
+
+        $category = new Category($elementId, 2);
+        if ($category->id_category && $category->id_category != ''){
+            $tabCategory['id'] = $category->id_category;
+            $tabCategory['name'] = $category->name[1];
+            $tabCategory['description'] = $category->description[1];
+        }
+
+        $this->returnAjax['message'] = 'Category loaded';
+        $this->returnAjax['category'] = $tabCategory;
+    }
+
+
+    /**
+     * @param $id
+     * @param $objData
+     */
+    public function setCategoryName($id, $objData){
+        OptMeUtils::saveObjField($id, 'category', $name=array(1), $objData->new_name, $this);
+    }
+
 
 
     /**
