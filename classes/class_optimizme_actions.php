@@ -24,12 +24,21 @@ class OptimizMeActions
         $this->returnAjax = array();
     }
 
+
+    /**
+     * Get list of available languages
+     */
+    public function getListLang(){
+        return Language::getLanguages();
+    }
+
+
     /**
      * @param $idPost
      * @param $objData
      */
     public function updateTitle($idPost, $objData){
-        OptMeUtils::saveObjField($idPost, 'product', 'name', $objData->new_title, $this, 1);
+        OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'name', $objData->new_title, $this, 1);
     }
 
     /**
@@ -106,7 +115,7 @@ class OptimizMeActions
             $newContent = OptMeUtils::cleanHtmlFromEasycontent($newContent);
 
             // save product content
-            OptMeUtils::saveObjField($idPost, 'product', 'description', $newContent, $this);
+            OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'description', $newContent, $this);
 
             if (count($this->tabErrors) == 0){
                 $this->returnAjax['message'] = 'Contenu enregistré avec succès';
@@ -121,7 +130,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateShortDescription($idPost, $objData){
-        OptMeUtils::saveObjField($idPost, 'product', 'description_short', $objData->new_short_description, $this);
+        OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'description_short', $objData->new_short_description, $this);
     }
 
     /**
@@ -146,7 +155,7 @@ class OptimizMeActions
             {
                 // load nodes
                 $doc = new DOMDocument;
-                $nodes = OptMeUtils::getNodesInDom($doc, $tag, $product->description[1]);
+                $nodes = OptMeUtils::getNodesInDom($doc, $tag, $product->description[1]);       // TODO pourquoi 1 ?
                 if ($nodes->length > 0) {
                     foreach ($nodes as $node) {
 
@@ -204,7 +213,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateMetaDescription($idPost, $objData){
-        OptMeUtils::saveObjField($idPost, 'product', 'meta_description', $objData->meta_description, $this);
+        OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'meta_description', $objData->meta_description, $this);
     }
 
 
@@ -213,7 +222,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function updateMetaTitle($idPost, $objData){
-        OptMeUtils::saveObjField($idPost, 'product', 'meta_title', $objData->meta_title, $this);
+        OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'meta_title', $objData->meta_title, $this);
     }
 
 
@@ -242,7 +251,7 @@ class OptimizMeActions
      */
     public function updatePostStatus($idPost, $objData){
         if ( !isset($objData->is_publish) )         $objData->is_publish = 0;
-        OptMeUtils::saveObjField($idPost, 'product', 'active', $objData->is_publish, $this);
+        OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'active', $objData->is_publish, $this);
     }
 
 
@@ -257,20 +266,23 @@ class OptimizMeActions
         if ($idPost == ''){
             array_push($this->tabErrors, 'Produit non trouvé.');
         }
+        elseif (!isset($objData->id_lang) || !is_numeric($objData->id_lang)){
+            array_push($this->tabErrors, 'Lang not set.');
+        }
         elseif (!isset($objData->new_slug) || $objData->new_slug == ''){
             // need more data
             array_push($this->tabErrors, 'Veuillez saisir le slug');
         }
         else
         {
-            $product = new Product($idPost);
+            $product = new Product($idPost, false, $objData->id_lang);
             $slugPropre = Tools::str2url($objData->new_slug);
             $product->link_rewrite = $slugPropre;
 
             try {
                 $product->save();
 
-                $this->returnAjax['url'] = OptMeUtils::getProductUrl($idPost);
+                $this->returnAjax['url'] = OptMeUtils::getProductUrl($idPost, $objData->id_lang);
                 $this->returnAjax['message'] = 'Slug changé avec succès';
                 $this->returnAjax['new_slug'] = $slugPropre;
 
@@ -287,25 +299,25 @@ class OptimizMeActions
      */
     public function loadPostContent($idPost, $objData){
 
-        $product = new Product($idPost);
+        $product = new Product($idPost, false, $objData->id_lang);
         if ($product->id != ''){
 
             // check si le contenu est bien compris dans une balise "row" pour qu'il soit bien inclus dans l'éditeur
-            if (trim($product->description[1]) != ''){
-                if (!stristr($product->description[1], '<div class="row')){
-                    $product->description[1] = '<div class="row ui-droppable"><div class="col-md-12 col-sm-12 col-xs-12 column"><div class="ge-content ge-content-type-tinymce" data-ge-content-type="tinymce">'. $product->description[1] .'</div></div></div>';
+            if (trim($product->description) != ''){
+                if (!stristr($product->description, '<div class="row')){
+                    $product->description = '<div class="row ui-droppable"><div class="col-md-12 col-sm-12 col-xs-12 column"><div class="ge-content ge-content-type-tinymce" data-ge-content-type="tinymce">'. $product->description .'</div></div></div>';
                 }
             }
 
             // load and return product data
-            $this->returnAjax['title'] = $product->name[1];                             // TODO pourquoi 1 ?
-            $this->returnAjax['short_description'] = $product->description_short[1];    // TODO pourquoi 1 ?
-            $this->returnAjax['content'] = $product->description[1];                    // TODO pourquoi 1 ?
-            $this->returnAjax['slug'] = $product->link_rewrite[1];                      // TODO pourquoi 1 ?
-            $this->returnAjax['url'] = OptMeUtils::getProductUrl($product->id);
+            $this->returnAjax['title'] = $product->name;
+            $this->returnAjax['short_description'] = $product->description_short;
+            $this->returnAjax['content'] = $product->description;
+            $this->returnAjax['slug'] = $product->link_rewrite;
+            $this->returnAjax['url'] = OptMeUtils::getProductUrl($product->id, $objData->id_lang);
             $this->returnAjax['publish'] = $product->active;
-            $this->returnAjax['meta_description'] = $product->meta_description[1];      // TODO pourquoi 1 ?
-            $this->returnAjax['meta_title'] = $product->meta_title[1];                  // TODO pourquoi 1 ?
+            $this->returnAjax['meta_description'] = $product->meta_description;
+            $this->returnAjax['meta_title'] = $product->meta_title;
             $this->returnAjax['url_canonical'] = 'todo';                                // TODO gestion url canonique
             $this->returnAjax['noindex'] = 'todo';                                      // TODO gestion noindex
             $this->returnAjax['nofollow'] = 'todo';                                     // TODO gestion nofollow
@@ -317,12 +329,16 @@ class OptimizMeActions
     /**
      * Load all categories
      */
-    public function loadCategories(){
+    public function loadCategories($objData){
 
         $tabResults = array();
 
         // get languages in shop
-        $categories = Category::getCategories(false, true, false);
+        if (!isset($objData->id_lang) || !is_numeric($objData->id_lang))        $langCategories = false;
+        else                                                                    $langCategories = $objData->id_lang;
+
+        // don't get root category
+        $categories = Category::getCategories($langCategories, true, false, ' AND id_parent > 0 ');
 
         if (is_array($categories) && count($categories)){
             foreach ($categories as $categoryLoop){
@@ -352,11 +368,14 @@ class OptimizMeActions
     public function loadCategoryContent($elementId, $objData){
         $tabCategory = array();
 
-        $category = new Category($elementId, 2);
+        if (!isset($objData->id_lang) || !is_numeric($objData->id_lang))
+            $objData->id_lang = 1;
+
+        $category = new Category($elementId, $objData->id_lang);
         if ($category->id_category && $category->id_category != ''){
             $tabCategory['id'] = $category->id_category;
-            $tabCategory['name'] = $category->name[1];
-            $tabCategory['description'] = $category->description[1];
+            $tabCategory['name'] = $category->name;
+            $tabCategory['description'] = $category->description;
         }
 
         $this->returnAjax['message'] = 'Category loaded';
@@ -369,7 +388,7 @@ class OptimizMeActions
      * @param $objData
      */
     public function setCategoryName($id, $objData){
-        OptMeUtils::saveObjField($id, 'category', $name=array(1), $objData->new_name, $this);
+        OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'name', $objData->new_name, $this);
     }
 
 
@@ -381,34 +400,38 @@ class OptimizMeActions
         $productsReturn = array();
         $tabResults = array();
 
-        // get languages in shop
-        $langs = OptMeUtils::getPrestashopLanguages();
+        if (isset($objData->id_lang) && is_numeric($objData->id_lang)){
+            // langs loaded
+            $lang = $objData->id_lang;
+        }
+        else {
+            // langs not loaded
+            $tabLangs = $this->getListLang();
+            $this->returnAjax['langs'] = $tabLangs;
+            $lang = $tabLangs[0]['id_lang'];
+        }
 
-        if (is_array($langs) && count($langs)>0){
-            foreach ($langs as $lang){
-
-                // get products by lang
-                $allProducts = Product::getProducts($lang['id_lang'], 0, -1, 'name', 'ASC');
-                if (is_array($allProducts) && count($allProducts)>0){
-                    foreach ($allProducts as $product){
-                        if ($product['name'] != ''){
-                            if ($product['active'] == 1)        $status = 'En ligne';
-                            else                                $status = 'Hors ligne';
-                            $prodReturn = array(
-                                'ID' => $product['id_product'],
-                                'post_title' => $product['name'],
-                                'post_status' => $status
-                            );
-                            array_push($productsReturn, $prodReturn);
-                        }
-
-                    }
+        // get products by lang
+        $allProducts = Product::getProducts($lang, 0, -1, 'name', 'ASC');
+        if (is_array($allProducts) && count($allProducts)>0){
+            foreach ($allProducts as $product){
+                if ($product['name'] != ''){
+                    if ($product['active'] == 1)        $status = 'En ligne';
+                    else                                $status = 'Hors ligne';
+                    $prodReturn = array(
+                        'ID' => $product['id_product'],
+                        'post_title' => $product['name'],
+                        'post_status' => $status
+                    );
+                    array_push($productsReturn, $prodReturn);
                 }
+
             }
         }
 
         $tabResults['posts'] = $productsReturn;
         $this->returnAjax['arborescence'] = $tabResults;
+
     }
 
 

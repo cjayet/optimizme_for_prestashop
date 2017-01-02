@@ -67,8 +67,8 @@ class OptimizMeCore {
                     //case 'redirection_delete':          $optAction->deleteRedirection($dataOptimizme); break;
 
                     // load content
-                    case 'load_post_content' :          $optAction->loadPostContent($elementId, $dataOptimizme); break;
                     case 'load_posts_pages':            $optAction->loadPostsPages($dataOptimizme); break;
+                    case 'load_post_content' :          $optAction->loadPostContent($elementId, $dataOptimizme); break;
                     //case 'load_lorem_ipsum':            $optAction->loadLoremIpsum(); break;
                     //case 'load_redirections':           $optAction->loadRedirections(); break;
                     //case 'load_images_post':            $optAction->loadImagesFromPost($elementId, $dataOptimizme); break;
@@ -77,7 +77,7 @@ class OptimizMeCore {
 
 
                     // categories
-                    case 'load_categories':            $optAction->loadCategories(); break;
+                    case 'load_categories':            $optAction->loadCategories($dataOptimizme); break;
                     case 'load_category_content':      $optAction->loadCategoryContent($elementId, $dataOptimizme); break;
                     case 'set_category_name':          $optAction->setCategoryName($elementId, $dataOptimizme); break;
 

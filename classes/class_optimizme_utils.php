@@ -21,40 +21,6 @@ class OptMeUtils
      * @param $nbElements
      */
     public static function showNewsRss($feed, $nbElements){
-        /* @var $item WP_Post */
-        $maxitems = 0;
-        $rss_items = array();
-        ?>
-        <h3><?php _e( 'Articles récents de notre blog : ', 'optimizme' ); ?></h3>
-
-        <?php
-        // Get a SimplePie feed object from the specified feed source.
-        $rss = fetch_feed( $feed );
-
-        if ( ! is_wp_error( $rss ) ) : // Checks that the object is created correctly
-
-            // Figure out how many total items there are, but limit it to 5.
-            $maxitems = $rss->get_item_quantity( $nbElements );
-
-            // Build an array of all the items, starting with element 0 (first element).
-            $rss_items = $rss->get_items( 0, $maxitems );
-
-        endif; ?>
-
-        <ul>
-            <?php if ( $maxitems == 0 ) : ?>
-                <li><?php _e( 'Aucun article trouvé', 'optimizme' ); ?></li>
-            <?php else : ?>
-                <?php foreach ( $rss_items as $item ) : ?>
-                    <li>
-                        <a href="<?php echo esc_url( $item->get_permalink() ); ?>" title="<?php printf( __( 'Posté le %s', 'optimizme' ), $item->get_date('j F Y | g:i a') ); ?>" target="_blank">
-                            <?php echo esc_html( $item->get_title() ); ?>
-                        </a>
-                    </li>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </ul>
-        <?php
     }
 
     /**
@@ -168,7 +134,7 @@ class OptMeUtils
     /**
      * @return array
      */
-    public function getAuthorizedMediaExtension(){
+    public static function getAuthorizedMediaExtension(){
         $tabExtensions = array( 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'svg', //Images
             'doc', 'docx', 'rtf', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ots', 'ott', 'odb', 'odg', 'otp', 'otg', 'odf', 'ods', 'odp' // files
         );
@@ -228,104 +194,7 @@ class OptMeUtils
      * @return string
      */
     public static function getCanonicalUrl($post=''){
-        if ($post == '')    global $post;
 
-        if (defined( 'YOAST_ENVIRONMENT' )){
-            // yoast seo
-            $canonical = get_post_meta($post->ID, '_yoast_wpseo_canonical', true);
-        }
-        else {
-            // optimiz.me
-            $canonical          = '';
-            $canonical_override = '';
-
-            if ( $post->ID != '' && ($post->post_type == 'post' || $post->post_type == 'page') ) {
-
-                $obj       = get_queried_object();
-                $canonical = get_permalink( $obj->ID );
-
-                // get canonical if defined
-                $canonical_override = get_post_meta($post->ID, 'optimizme_canonical', true);
-                if ($canonical_override == '')
-                {
-                    // Fix paginated pages canonical, but only if the page is truly paginated.
-                    if ( get_query_var( 'page' ) > 1 ) {
-                        $num_pages = ( substr_count( $obj->post_content, '<!--nextpage-->' ) + 1 );
-                        if ( $num_pages && get_query_var( 'page' ) <= $num_pages ) {
-                            if ( ! $GLOBALS['wp_rewrite']->using_permalinks() ) {
-                                $canonical = add_query_arg( 'page', get_query_var( 'page' ), $canonical );
-                            }
-                            else {
-                                $canonical = user_trailingslashit( trailingslashit( $canonical ) . get_query_var( 'page' ) );
-                            }
-                        }
-                    }
-                }
-
-                if ($canonical == '')       $canonical = get_permalink($post->ID);
-            }
-            else {
-                if ( is_search() ) {
-                    $search_query = get_search_query();
-
-                    // Regex catches case when /search/page/N without search term is itself mistaken for search term. R.
-                    if ( ! empty( $search_query ) && ! preg_match( '|^page/\d+$|', $search_query ) ) {
-                        $canonical = get_search_link();
-                    }
-                }
-                elseif ( is_front_page() ){
-                    $canonical = home_url();
-                }
-                elseif ( is_tax() || is_tag() || is_category() ) {
-                    // TODO
-                    /*
-                    $term = get_queried_object();
-                    if ( ! empty( $term ) && ! $this->is_multiple_terms_query() ) {
-
-                        $canonical_override = WPSEO_Taxonomy_Meta::get_term_meta( $term, $term->taxonomy, 'canonical' );
-                        $term_link          = get_term_link( $term, $term->taxonomy );
-
-                        if ( ! is_wp_error( $term_link ) ) {
-                            $canonical = $term_link;
-                        }
-                    }
-                    */
-                }
-                elseif ( is_post_type_archive() ) {
-                    $post_type = get_query_var( 'post_type' );
-                    if ( is_array( $post_type ) ) {
-                        $post_type = reset( $post_type );
-                    }
-                    $canonical = get_post_type_archive_link( $post_type );
-                }
-                elseif ( is_author() ) {
-                    $canonical = get_author_posts_url( get_query_var( 'author' ), get_query_var( 'author_name' ) );
-                }
-                elseif ( is_archive() ) {
-                    if ( is_date() ) {
-                        if ( is_day() ) {
-                            $canonical = get_day_link( get_query_var( 'year' ), get_query_var( 'monthnum' ), get_query_var( 'day' ) );
-                        }
-                        elseif ( is_month() ) {
-                            $canonical = get_month_link( get_query_var( 'year' ), get_query_var( 'monthnum' ) );
-                        }
-                        elseif ( is_year() ) {
-                            $canonical = get_year_link( get_query_var( 'year' ) );
-                        }
-                    }
-                }
-            }
-
-            // defined canonical
-            if ( $canonical_override != '' ) {
-                $canonical = $canonical_override;
-            }
-        }
-
-
-
-
-        return $canonical;
     }
 
     /**
@@ -333,9 +202,7 @@ class OptMeUtils
      * @return mixed
      */
     public static function getMetaNoIndex($post){
-        $keyMetaNoIndex = OptMeUtils::getPostMetaKeyFromType('noindex');
-        $noIndex = get_post_meta($post->ID, $keyMetaNoIndex, true);
-        return $noIndex;
+
     }
 
     /**
@@ -343,9 +210,7 @@ class OptMeUtils
      * @return mixed
      */
     public static function getMetaNoFollow($post){
-        $keyMetaNoFollow = OptMeUtils::getPostMetaKeyFromType('nofollow');
-        $noFollow = get_post_meta($post->ID, $keyMetaNoFollow, true);
-        return $noFollow;
+
     }
 
 
@@ -418,24 +283,24 @@ class OptMeUtils
      * @param $idProduct
      * @return string
      */
-    public static function getProductUrl($idProduct){
-        //$product = new Product(Tools::getValue('id_product'));
-        $product = new Product($idProduct);
+    public static function getProductUrl($idProduct, $idLang){
+        $product = new Product($idProduct, false, $idLang);
         $link = new Link();
-        $url = $link->getProductLink($product);
+        $url = $link->getProductLink($product, null, null, null, $idLang);
         return $url;
     }
 
 
     /**
      * @param $idElement
+     * @param string $id_lang
      * @param $type
      * @param $field
      * @param $value
      * @param $objAction
      * @param int $isRequired
      */
-    public static function saveObjField($idElement, $type, $field, $value, $objAction, $isRequired=0){
+    public static function saveObjField($idElement, $id_lang='', $type, $field, $value, $objAction, $isRequired=0){
 
         if ( !is_numeric($idElement)){
             // need more data
@@ -454,7 +319,19 @@ class OptMeUtils
             // all is ok
             if ($type == 'product')     $obj = new Product($idElement);
             else                        $obj = new Category($idElement);
-            $obj->$field = $value;
+
+            if ($id_lang != ''){
+                // update field for a specific language
+                $tabField = $obj->$field;
+                if (is_array($tabField)){
+                    $tabField[$id_lang] = $value;
+                    $obj->$field = $tabField;
+                }
+            }
+            else{
+                // update field
+                $obj->$field = $value;
+            }
 
             try {
                 $obj->save();
