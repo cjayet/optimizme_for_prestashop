@@ -148,44 +148,7 @@ class OptMeUtils
      */
     public static function getMetaDescription($post){
 
-        $fieldMeta = OptMeUtils::getPostMetaKeyFromType('metadescription');
-        $metaDescription = get_post_meta($post->ID, $fieldMeta, true);
-
-        return $metaDescription;
     }
-
-
-    /**
-     * @param $type
-     * @return string
-     */
-    public static function getPostMetaKeyFromType($type)
-    {
-
-    }
-
-    /**
-     * @param $newMetaValue
-     * @param $idPost
-     * @param $metaKey
-     * @return bool
-     */
-    public static function doUpdatePostMeta($newMetaValue, $idPost, $metaKey){
-        $currentMetaDescription = get_post_meta($idPost, $metaKey, true);
-        if ($currentMetaDescription == $newMetaValue)       return false;
-        else                                                return true;
-    }
-
-
-    /**
-     *
-     */
-    public static function getMediaFilesCMS(){
-        $cmsFolder = _PS_IMG_DIR_ .'/cms/';
-
-
-    }
-
 
 
     /**

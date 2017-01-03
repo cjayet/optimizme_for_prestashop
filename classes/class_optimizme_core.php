@@ -77,9 +77,11 @@ class OptimizMeCore {
 
 
                     // categories
-                    case 'load_categories':            $optAction->loadCategories($dataOptimizme); break;
-                    case 'load_category_content':      $optAction->loadCategoryContent($elementId, $dataOptimizme); break;
-                    case 'set_category_name':          $optAction->setCategoryName($elementId, $dataOptimizme); break;
+                    case 'load_categories':             $optAction->loadCategories($dataOptimizme); break;
+                    case 'load_category_content':       $optAction->loadCategoryContent($elementId, $dataOptimizme); break;
+                    case 'set_category_name':           $optAction->setCategoryName($elementId, $dataOptimizme); break;
+                    case 'set_category_description':    $optAction->setCategoryDescription($elementId, $dataOptimizme); break;
+                    case 'set_category_slug':           $optAction->setCategorySlug($elementId, $dataOptimizme); break;
 
 
                     // create content

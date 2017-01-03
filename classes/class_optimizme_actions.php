@@ -251,7 +251,7 @@ class OptimizMeActions
      */
     public function updatePostStatus($idPost, $objData){
         if ( !isset($objData->is_publish) )         $objData->is_publish = 0;
-        OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'active', $objData->is_publish, $this);
+        OptMeUtils::saveObjField($idPost, '', 'product', 'active', $objData->is_publish, $this);
     }
 
 
@@ -333,6 +333,17 @@ class OptimizMeActions
 
         $tabResults = array();
 
+        if (isset($objData->id_lang) && is_numeric($objData->id_lang)){
+            // langs loaded
+            $lang = $objData->id_lang;
+        }
+        else {
+            // langs not loaded
+            $tabLangs = $this->getListLang();
+            $this->returnAjax['langs'] = $tabLangs;
+            $lang = $tabLangs[0]['id_lang'];
+        }
+
         // get languages in shop
         if (!isset($objData->id_lang) || !is_numeric($objData->id_lang))        $langCategories = false;
         else                                                                    $langCategories = $objData->id_lang;
@@ -389,6 +400,15 @@ class OptimizMeActions
      */
     public function setCategoryName($id, $objData){
         OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'name', $objData->new_name, $this);
+    }
+
+    public function setCategoryDescription($id, $objData){
+        OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'description', $objData->description, $this);
+    }
+
+
+    public function setCategorySlug($id, $objData){
+        //OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'link_rewrite', $objData->new_slug, $this);
     }
 
 
