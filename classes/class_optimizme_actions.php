@@ -25,19 +25,57 @@ class OptimizMeActions
     }
 
 
-    /**
-     * Get list of available languages
-     */
-    public function getListLang(){
-        return Language::getLanguages();
-    }
+    ////////////////////////////////////////////////
+    //              PRODUCTS
+    ////////////////////////////////////////////////
 
+    /**
+     * Load posts/pages
+     */
+    public function loadPostsPages($objData){
+        $productsReturn = array();
+        $tabResults = array();
+
+        if (isset($objData->id_lang) && is_numeric($objData->id_lang)){
+            // langs already loaded and available
+            $lang = $objData->id_lang;
+        }
+        else {
+            // langs not loaded
+            $tabLangs = $this->getListLang();
+            $this->returnAjax['langs'] = $tabLangs;
+            $lang = $tabLangs[0]['id_lang'];
+        }
+
+
+        // get products by lang
+        $allProducts = Product::getProducts($lang, 0, -1, 'name', 'ASC');
+        if (is_array($allProducts) && count($allProducts)>0){
+            foreach ($allProducts as $product){
+                if ($product['name'] != ''){
+                    if ($product['active'] == 1)        $status = 'En ligne';
+                    else                                $status = 'Hors ligne';
+                    $prodReturn = array(
+                        'ID' => $product['id_product'],
+                        'post_title' => $product['name'],
+                        'post_status' => $status
+                    );
+                    array_push($productsReturn, $prodReturn);
+                }
+
+            }
+        }
+
+        $tabResults['posts'] = $productsReturn;
+        $this->returnAjax['arborescence'] = $tabResults;
+
+    }
 
     /**
      * @param $idPost
      * @param $objData
      */
-    public function updateTitle($idPost, $objData){
+    public function setTitle($idPost, $objData){
         OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'name', $objData->new_title, $this, 1);
     }
 
@@ -45,14 +83,10 @@ class OptimizMeActions
      * @param $idPost
      * @param $objData
      */
-    public function updateContent($idPost, $objData){
-
-        //$images = Image::getImages(1, $idPost);
-        //OptMeUtils::nice($images); die;
+    public function setContent($idPost, $objData){
 
         // no clean for grid editor
         Configuration::updateValue('PS_USE_HTMLPURIFIER', 0);
-
 
         if (!isset($objData->new_content))
         {
@@ -129,7 +163,7 @@ class OptimizMeActions
      * @param $idPost
      * @param $objData
      */
-    public function updateShortDescription($idPost, $objData){
+    public function setShortDescription($idPost, $objData){
         OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'description_short', $objData->new_short_description, $this);
     }
 
@@ -137,7 +171,7 @@ class OptimizMeActions
      * @param $idPost
      * @param $objData
      */
-    public function updateAttributesTag($idProduct, $objData, $tag){
+    public function setAttributesTag($idProduct, $objData, $tag){
 
         $boolModified = 0;
         if ( !is_numeric($idProduct)){
@@ -212,28 +246,23 @@ class OptimizMeActions
      * @param $idPost
      * @param $objData
      */
-    public function updateMetaDescription($idPost, $objData){
+    public function setMetaDescription($idPost, $objData){
         OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'meta_description', $objData->meta_description, $this);
     }
 
-
     /**
      * @param $idPost
      * @param $objData
      */
-    public function updateMetaTitle($idPost, $objData){
+    public function setMetaTitle($idPost, $objData){
         OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'meta_title', $objData->meta_title, $this);
     }
 
-
-
-
     /**
      * @param $idPost
      * @param $objData
      */
-    public function updateCanonicalUrl($idPost, $objData)
-    {
+    public function setCanonicalUrl($idPost, $objData){
         // TODO
     }
 
@@ -241,7 +270,7 @@ class OptimizMeActions
      * @param $idPost
      * @param $objData
      */
-    public function updateMetaRobots($idPost, $objData){
+    public function setMetaRobots($idPost, $objData){
         // TODO
     }
 
@@ -249,12 +278,10 @@ class OptimizMeActions
      * @param $idPost
      * @param $objData
      */
-    public function updatePostStatus($idPost, $objData){
+    public function setPostStatus($idPost, $objData){
         if ( !isset($objData->is_publish) )         $objData->is_publish = 0;
         OptMeUtils::saveObjField($idPost, '', 'product', 'active', $objData->is_publish, $this);
     }
-
-
 
     /**
      * Change permalink of a post
@@ -262,7 +289,7 @@ class OptimizMeActions
      * @param $idPost
      * @param $objData
      */
-    public function updateSlug($idPost, $objData){
+    public function setProductSlug($idPost, $objData){
         if ($idPost == ''){
             array_push($this->tabErrors, 'Produit non trouvé.');
         }
@@ -326,6 +353,11 @@ class OptimizMeActions
     }
 
 
+
+    ////////////////////////////////////////////////
+    //              CATEGORIES
+    ////////////////////////////////////////////////
+
     /**
      * Load all categories
      */
@@ -371,7 +403,6 @@ class OptimizMeActions
         $this->returnAjax['categories'] = $tabResults;
     }
 
-
     /**
      * @param $elementId
      * @param $objData
@@ -379,20 +410,21 @@ class OptimizMeActions
     public function loadCategoryContent($elementId, $objData){
         $tabCategory = array();
 
-        if (!isset($objData->id_lang) || !is_numeric($objData->id_lang))
-            $objData->id_lang = 1;
+        // get requested language, or default language
+        $lang = OptMeUtils::getIdLanguage($objData->id_lang);
 
-        $category = new Category($elementId, $objData->id_lang);
+        $category = new Category($elementId, $lang);
         if ($category->id_category && $category->id_category != ''){
             $tabCategory['id'] = $category->id_category;
             $tabCategory['name'] = $category->name;
             $tabCategory['description'] = $category->description;
+            $tabCategory['url'] = $category->getLink(null, $lang);
+            $tabCategory['slug'] = $category->link_rewrite;
         }
 
         $this->returnAjax['message'] = 'Category loaded';
         $this->returnAjax['category'] = $tabCategory;
     }
-
 
     /**
      * @param $id
@@ -402,67 +434,35 @@ class OptimizMeActions
         OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'name', $objData->new_name, $this);
     }
 
+    /**
+     * @param $id
+     * @param $objData
+     */
     public function setCategoryDescription($id, $objData){
         OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'description', $objData->description, $this);
     }
 
-
+    /**
+     * @param $id
+     * @param $objData
+     */
     public function setCategorySlug($id, $objData){
-        //OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'link_rewrite', $objData->new_slug, $this);
+
+        $lang = OptMeUtils::getIdLanguage($objData->id_lang);
+        if (OptMeUtils::saveObjField($id, $lang, 'category', 'link_rewrite', $objData->new_slug, $this)){
+            $categoryUpdated = new Category($id);
+
+            // return informations
+            $this->returnAjax['message'] = 'URL changed';
+            $this->returnAjax['url'] = $categoryUpdated->getLink(null, $lang);
+            $this->returnAjax['new_slug'] = $categoryUpdated->link_rewrite[$lang];
+        }
     }
 
 
-
-    /**
-     * Load posts/pages
-     */
-    public function loadPostsPages($objData){
-        $productsReturn = array();
-        $tabResults = array();
-
-        if (isset($objData->id_lang) && is_numeric($objData->id_lang)){
-            // langs loaded
-            $lang = $objData->id_lang;
-        }
-        else {
-            // langs not loaded
-            $tabLangs = $this->getListLang();
-            $this->returnAjax['langs'] = $tabLangs;
-            $lang = $tabLangs[0]['id_lang'];
-        }
-
-        // get products by lang
-        $allProducts = Product::getProducts($lang, 0, -1, 'name', 'ASC');
-        if (is_array($allProducts) && count($allProducts)>0){
-            foreach ($allProducts as $product){
-                if ($product['name'] != ''){
-                    if ($product['active'] == 1)        $status = 'En ligne';
-                    else                                $status = 'Hors ligne';
-                    $prodReturn = array(
-                        'ID' => $product['id_product'],
-                        'post_title' => $product['name'],
-                        'post_status' => $status
-                    );
-                    array_push($productsReturn, $prodReturn);
-                }
-
-            }
-        }
-
-        $tabResults['posts'] = $productsReturn;
-        $this->returnAjax['arborescence'] = $tabResults;
-
-    }
-
-
-    /**
-     * Load false content
-     */
-    public function loadLoremIpsum(){
-        $nbParagraphes = rand(2,4);
-        $content = file_get_contents('http://loripsum.net/api/'.$nbParagraphes.'/short/decorate/');
-        $this->returnAjax['content'] = $content;
-    }
+    ////////////////////////////////////////////////
+    //              REDIRECTIONS
+    ////////////////////////////////////////////////
 
     /**
      * load list of redirections
@@ -503,6 +503,25 @@ class OptimizMeActions
     }
 
 
+    ////////////////////////////////////////////////
+    //              UTILS
+    ////////////////////////////////////////////////
+
+    /**
+     * Get list of available languages
+     */
+    public function getListLang(){
+        return Language::getLanguages();
+    }
+
+    /**
+     * Load false content
+     */
+    public function loadLoremIpsum(){
+        $nbParagraphes = rand(2,4);
+        $content = file_get_contents('http://loripsum.net/api/'.$nbParagraphes.'/short/decorate/');
+        $this->returnAjax['content'] = $content;
+    }
 
     /**
      * Check if has error or not
@@ -531,8 +550,8 @@ class OptimizMeActions
     }
 
     /**
-     * @param $msg
-     * @param string $typeResult : success, info, warning, danger
+     * @param $tabData
+     * @param string $typeResult: success, info, warning, danger
      */
     public function setDataReturn($tabData, $typeResult='success'){
         $this->returnResult['result'] = $typeResult;
@@ -546,154 +565,6 @@ class OptimizMeActions
         // return results
         header("Access-Control-Allow-Origin: *");
         echo json_encode($this->returnResult);
-    }
-
-
-    /**
-     * @param $idPost
-     */
-    public function loadImagesFromPost($idPost){
-
-        $tabImages = array();
-        if ($idPost != '') {
-            $post = get_post($idPost);
-
-            if ($post->ID != '') {
-
-                // load nodes
-                $doc = new DOMDocument;
-                $nodes = OptMeUtils::getNodesInDom($doc, 'img', $post->post_content);
-                if ($nodes->length > 0){
-                    foreach ($nodes as $node) {
-                        array_push($tabImages,
-                            array(
-                                'src' => $node->getAttribute('src'),
-                                'alt' => utf8_decode($node->getAttribute('alt')),
-                                'title' => utf8_decode($node->getAttribute('title'))
-                            ));
-                    }
-                }
-
-                $this->returnAjax['images'] = $tabImages;
-            }
-        }
-    }
-
-
-    /**
-     * @param $idPost
-     */
-    public function loadHrefFromPost($idPost){
-
-        $tabLiens = array();
-        if ($idPost != '') {
-            $post = get_post($idPost);
-
-            if ($post->ID != '') {
-
-                // load nodes
-                $doc = new DOMDocument;
-                $nodes = OptMeUtils::getNodesInDom($doc, 'a', $post->post_content);
-                if ($nodes->length > 0){
-                    foreach ($nodes as $node) {
-                        array_push($tabLiens,
-                            array(
-                                'href' => $node->getAttribute('href'),
-                                'rel' => $node->getAttribute('rel'),
-                                'target' => $node->getAttribute('target')
-                            ));
-                    }
-                }
-
-                $this->returnAjax['liens'] = $tabLiens;
-            }
-        }
-    }
-
-
-
-
-    /**
-     * Création d'un post
-     * @param $objData
-     */
-    public function createPost($objData){
-        $flagError = 0;
-        if (!isset($objData->post_type) || $objData->post_type == ''){
-            // need more data
-            array_push($this->tabErrors, __('Type de contenu non défini (article ou page)', 'optimizme'));
-            $flagError = 1;
-        }
-
-        if (!isset($objData->title) || $objData->title == ''){
-            // need more data
-            array_push($this->tabErrors, __('Veuillez indiquer un titre', 'optimizme'));
-            $flagError = 1;
-        }
-
-        if (!isset($objData->post_status) || $objData->post_status == ''){
-            array_push($this->tabErrors, __('Veuillez indiquer un état', 'optimizme'));
-            $flagError = 1;
-        }
-
-        if ($flagError == 0)
-        {
-            $args = array(
-                'post_type' => $objData->post_type,
-                'post_title' => $objData->title,
-                'post_status' => $objData->post_status
-            );
-            if (isset($objData->parent) && $objData->parent != ''){
-                $args['post_parent'] = $objData->parent;
-            }
-
-            $idPostCreate = wp_insert_post($args);
-            if ($idPostCreate){
-                $permalink = get_permalink($idPostCreate);
-
-                // load and return post data
-                $this->returnAjax['title'] = $objData->title;
-                $this->returnAjax['permalink'] = $permalink;
-                $this->returnAjax['message'] = __('Création terminée avec succès : ', 'optimizme') .'<a href="'. $permalink .'">'. $permalink .'</a>';
-            }
-            else {
-                // error creation
-                array_push($this->tabErrors, __('Erreur création post', 'optimizme'));
-            }
-        }
-    }
-
-
-    /**
-     * @param $objData
-     */
-    public function setBlogPublicOrPrivate($objData){
-        // wp
-    }
-
-
-    /**
-     * Load options from site
-     */
-    public function loadSiteOptions(){
-        // wp
-    }
-
-
-    /**
-     * Set blog name
-     * @param $objData
-     */
-    public function setBlogTitle($objData){
-        // wp
-    }
-
-    /**
-     * Set blog name
-     * @param $objData
-     */
-    public function setBlogDescription($objData){
-        // wp
     }
 
 }

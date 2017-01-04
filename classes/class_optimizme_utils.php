@@ -240,6 +240,22 @@ class OptMeUtils
         return $langs;
     }
 
+    /**
+     * Return language id, first language if not specified
+     * @param string $idLang
+     * @return string
+     */
+    public static function getIdLanguage($idLang=''){
+        if (isset($idLang) && is_numeric($idLang)){
+            return $idLang;
+        }
+        else {
+            $tabLangs = OptMeUtils::getPrestashopLanguages();
+            return $tabLangs[0]['id_lang'];
+        }
+    }
+
+
 
     /**
      * Return permalink for a product
@@ -262,6 +278,7 @@ class OptMeUtils
      * @param $value
      * @param $objAction
      * @param int $isRequired
+     * @return bool
      */
     public static function saveObjField($idElement, $id_lang='', $type, $field, $value, $objAction, $isRequired=0){
 
@@ -298,9 +315,11 @@ class OptMeUtils
 
             try {
                 $obj->save();
+                return true;
             } catch (Exception $e) {
                 // error
                 array_push($objAction->tabErrors, 'CATCH '. $e->getMessage());
+                return false;
             }
         }
     }

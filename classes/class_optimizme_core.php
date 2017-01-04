@@ -49,17 +49,17 @@ class OptimizMeCore {
                 switch ($dataOptimizme->action){
 
                     // post
-                    case 'set_post_title' :             $optAction->updateTitle($elementId, $dataOptimizme); break;
-                    case 'set_post_content' :           $optAction->updateContent($elementId, $dataOptimizme); break;
-                    case 'set_post_shortdescription' :  $optAction->updateShortDescription($elementId, $dataOptimizme); break;
-                    case 'set_post_metadescription' :   $optAction->updateMetaDescription($elementId, $dataOptimizme); break;
-                    case 'set_post_metatitle' :         $optAction->updateMetaTitle($elementId, $dataOptimizme); break;
-                    case 'set_post_slug' :              $optAction->updateSlug($elementId, $dataOptimizme); break;
-                    //case 'set_post_canonicalurl' :      $optAction->updateCanonicalUrl($elementId, $dataOptimizme); break;
-                    //case 'set_post_metarobots' :        $optAction->updateMetaRobots($elementId, $dataOptimizme); break;
-                    case 'set_post_status' :            $optAction->updatePostStatus($elementId, $dataOptimizme); break;
-                    case 'set_post_imgattributes' :     $optAction->updateAttributesTag($elementId, $dataOptimizme, 'img'); break;
-                    case 'set_post_hrefattributes' :    $optAction->updateAttributesTag($elementId, $dataOptimizme, 'a'); break;
+                    case 'set_post_title' :             $optAction->setTitle($elementId, $dataOptimizme); break;
+                    case 'set_post_content' :           $optAction->setContent($elementId, $dataOptimizme); break;
+                    case 'set_post_shortdescription' :  $optAction->setShortDescription($elementId, $dataOptimizme); break;
+                    case 'set_post_metadescription' :   $optAction->setMetaDescription($elementId, $dataOptimizme); break;
+                    case 'set_post_metatitle' :         $optAction->setMetaTitle($elementId, $dataOptimizme); break;
+                    case 'set_post_slug' :              $optAction->setProductSlug($elementId, $dataOptimizme); break;
+                    //case 'set_post_canonicalurl' :      $optAction->setCanonicalUrl($elementId, $dataOptimizme); break;
+                    //case 'set_post_metarobots' :        $optAction->setMetaRobots($elementId, $dataOptimizme); break;
+                    case 'set_post_status' :            $optAction->setPostStatus($elementId, $dataOptimizme); break;
+                    case 'set_post_imgattributes' :     $optAction->setAttributesTag($elementId, $dataOptimizme, 'img'); break;
+                    case 'set_post_hrefattributes' :    $optAction->setAttributesTag($elementId, $dataOptimizme, 'a'); break;
 
                     // redirections
                     //case 'redirection_enable':          $optAction->enableDisableRedirection($dataOptimizme, 0); break;
@@ -71,9 +71,6 @@ class OptimizMeCore {
                     case 'load_post_content' :          $optAction->loadPostContent($elementId, $dataOptimizme); break;
                     //case 'load_lorem_ipsum':            $optAction->loadLoremIpsum(); break;
                     //case 'load_redirections':           $optAction->loadRedirections(); break;
-                    //case 'load_images_post':            $optAction->loadImagesFromPost($elementId, $dataOptimizme); break;
-                    //case 'load_href_post':              $optAction->loadHrefFromPost($elementId, $dataOptimizme); break;
-                    //case 'load_site_options':           $optAction->loadSiteOptions(); break;
 
 
                     // categories
@@ -82,15 +79,6 @@ class OptimizMeCore {
                     case 'set_category_name':           $optAction->setCategoryName($elementId, $dataOptimizme); break;
                     case 'set_category_description':    $optAction->setCategoryDescription($elementId, $dataOptimizme); break;
                     case 'set_category_slug':           $optAction->setCategorySlug($elementId, $dataOptimizme); break;
-
-
-                    // create content
-                    //case 'set_create_post':             $optAction->createPost($dataOptimizme); break;
-
-                    // blogs
-                    //case 'set_site_title':              $optAction->setBlogTitle($dataOptimizme); break;
-                    //case 'set_site_description':        $optAction->setBlogDescription($dataOptimizme); break;
-                    //case 'set_site_blogpublic':         $optAction->setBlogPublicOrPrivate($dataOptimizme); break;
 
                     default:                            $this->boolNoAction = 1; break;
                 }
