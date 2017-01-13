@@ -302,12 +302,19 @@ class OptimizMeActions
         }
         else
         {
+            $link = new Link();
+
             $product = new Product($idPost, false, $objData->id_lang);
+            $previousURL = $link->getProductLink($product, null, null, null, $objData->id_lang);
+
             $slugPropre = Tools::str2url($objData->new_slug);
             $product->link_rewrite = $slugPropre;
 
             try {
                 $product->save();
+
+                // new url
+                $newURL = $link->getProductLink($product, null, null, null, $objData->id_lang);
 
                 $this->returnAjax['url'] = OptMeUtils::getProductUrl($idPost, $objData->id_lang);
                 $this->returnAjax['message'] = 'Slug changé avec succès';
@@ -316,6 +323,18 @@ class OptimizMeActions
             } catch (Exception $e) {
                 array_push($this->tabErrors, "Erreur lors de l'enregistrement du slug : ". $e->getMessage());
             }
+
+            // add redirection from old url to new url
+            $objRedirect = new OptimizMeRedirections();
+            try {
+                $objRedirect->addRedirection($previousURL, $newURL);
+            }
+            catch (Exception $e){
+                $this->returnAjax['message'] = 'Error adding redirection';
+            }
+
+
+
         }
     }
 
@@ -420,6 +439,8 @@ class OptimizMeActions
             $tabCategory['description'] = $category->description;
             $tabCategory['url'] = $category->getLink(null, $lang);
             $tabCategory['slug'] = $category->link_rewrite;
+            $tabCategory['seo_title'] = $category->meta_title;
+            $tabCategory['seo_description'] = $category->meta_description;
         }
 
         $this->returnAjax['message'] = 'Category loaded';
@@ -459,6 +480,22 @@ class OptimizMeActions
         }
     }
 
+    /**
+     * @param $id
+     * @param $objData
+     */
+    public function setCategoryMetaTitle($id, $objData){
+        OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'meta_title', $objData->meta_title, $this);
+    }
+
+    /**
+     * @param $id
+     * @param $objData
+     */
+    public function setCategoryMetaDescription($id, $objData){
+        OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'meta_description', $objData->meta_description, $this);
+    }
+
 
     ////////////////////////////////////////////////
     //              REDIRECTIONS
@@ -468,7 +505,8 @@ class OptimizMeActions
      * load list of redirections
      */
     public function loadRedirections(){
-        $this->returnAjax['redirections'] = OptimizMeRedirections::getAllRedirections('all');
+        $redirection = new OptimizMeRedirections();
+        $this->returnAjax['redirections'] = $redirection->getAllRedirections('all');
     }
 
     /**

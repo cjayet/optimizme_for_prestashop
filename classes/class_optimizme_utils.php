@@ -309,7 +309,7 @@ class OptMeUtils
                 }
             }
             else{
-                // update field
+                // update field (all languages)
                 $obj->$field = $value;
             }
 

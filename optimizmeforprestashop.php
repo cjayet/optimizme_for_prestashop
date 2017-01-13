@@ -32,7 +32,7 @@ class OptimizmeForPrestashop extends Module
         $this->version = '1.0.0';
         $this->author = 'Optimiz.me';
         $this->need_instance = 0;
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+        $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
 
         parent::__construct();
 
@@ -53,7 +53,9 @@ class OptimizmeForPrestashop extends Module
 		//  - if necessary, redirect
 		/////////////////////////////////////
 
-		//$optMeRedirect = new OptimizMeRedirections();
+		$optMeRedirect = new OptimizMeRedirections();
+
+
 
 		/////////////////////////////////////////
 		// FRONT-OFFICE
@@ -69,10 +71,9 @@ class OptimizmeForPrestashop extends Module
     /**
      * @return bool
      */
-    public function install()
-    {
-        // enregistrement du hook (DESINSTALLER ET REINSTALLER CE MODULE SI CELA CHANGE !)
-        // ou (probablement) passer par "Modules et Services >> Positions"
+    public function install(){
+        // register hook (uninstall and reinstall if changes)
+        $this->createDBTables();
         return (parent::install() && $this->registerHook('displayBeforeBodyClosingTag') && $this->registerHook('header'));
     }
 
@@ -84,6 +85,22 @@ class OptimizmeForPrestashop extends Module
         if (!parent::uninstall() || !Configuration::deleteByName('OPTIMIZMEFORPRESTASHOP_NAME'))
             return false;
         return true;
+    }
+
+    /**
+     *  Add table for redirections in DB
+     */
+    public function createDBTables(){
+        Db::getInstance()->Execute('
+           CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'optimizme_redirections` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `url_base` varchar(255) NOT NULL ,
+            `url_redirect` varchar(255) NOT NULL,
+            `is_disabled` smallint(1) NOT NULL DEFAULT 0,
+            `created_at` DATETIME NULL DEFAULT NULL,
+            `updated_at` DATETIME NULL DEFAULT NULL,
+            PRIMARY KEY (`id`)
+           )ENGINE=MyISAM DEFAULT CHARSET=latin1;');
     }
 
 
