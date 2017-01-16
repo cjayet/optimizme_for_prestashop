@@ -6,7 +6,7 @@
  * Date: 09/11/2016
  * Time: 15:00
  */
-class OptimizMeActions
+class OptimizMeActions extends Module
 {
     public $returnResult;
     public $tabErrors;
@@ -72,6 +72,13 @@ class OptimizMeActions
     }
 
     /**
+     * Get list of available languages
+     */
+    public function getListLang(){
+        return Language::getLanguages();
+    }
+
+    /**
      * @param $idPost
      * @param $objData
      */
@@ -91,7 +98,7 @@ class OptimizMeActions
         if (!isset($objData->new_content))
         {
             // need more data
-            array_push($this->tabErrors, 'Contenu non trouvé.');
+            array_push($this->tabErrors,  $this->getTranslator()->trans('Contenu non trouvé.', array(), 'Modules.OptimizMeForPrestashop') );
         }
         else{
 
@@ -118,11 +125,6 @@ class OptimizMeActions
                 {
                     // url media in easycontent
                     $urlFile = $node->getAttribute($attr);
-                    /*
-                    if(!(strpos($urlFile, 'http') === 0)){
-                        $urlFile = 'http://localhost'. $urlFile;        // TODO enlever localhost
-                    }
-                    */
 
                     // check if already in media library
                     if (OptMeUtils::isFileMedia($urlFile)){
@@ -130,7 +132,7 @@ class OptimizMeActions
                         if (!$urlMediaPrestashop){
                             $resAddImage = OptMeUtils::addMediaInLibrary($urlFile);
                              if ( !$resAddImage ){
-                                 array_push($this->tabErrors, 'Erreur lors de la copie de l\'image.');
+                                 array_push($this->tabErrors, $this->getTranslator()->trans("Erreur pendant la copie de l'image", array(), 'Modules.OptimizMeForPrestashop') );
                              }
                              else {
                                  $urlMediaPrestashop = $resAddImage;
@@ -152,7 +154,7 @@ class OptimizMeActions
             OptMeUtils::saveObjField($idPost, $objData->id_lang, 'product', 'description', $newContent, $this);
 
             if (count($this->tabErrors) == 0){
-                $this->returnAjax['message'] = 'Contenu enregistré avec succès';
+                $this->returnAjax['message'] = $this->getTranslator()->trans('Contenu enregistré avec succès', array(), 'Modules.OptimizMeForPrestashop');
                 $this->returnAjax['id_post'] = $idPost;
                 $this->returnAjax['content'] = $newContent;
             }
@@ -168,8 +170,9 @@ class OptimizMeActions
     }
 
     /**
-     * @param $idPost
+     * @param $idProduct
      * @param $objData
+     * @param $tag
      */
     public function setAttributesTag($idProduct, $objData, $tag){
 
@@ -222,7 +225,7 @@ class OptimizMeActions
 
                 if ($boolModified == 1){
                     // action done: save new content
-                    // span racine to enlever
+                    // span racine to remove
                     $newContent = OptMeUtils::getHtmlFromDom($doc);
 
                     // update
@@ -231,12 +234,12 @@ class OptimizMeActions
                         $product->save();
                     }
                     catch (Exception $e){
-                        array_push($this->tabErrors, "Erreur optimisation tag : ". $e->getMessage());
+                        array_push($this->tabErrors,  $this->getTranslator()->trans('Erreur optimisation tag : ', array(), 'Modules.OptimizMeForPrestashop') . $e->getMessage());
                     }
                 }
                 else {
                     // nothing done
-                    array_push($this->tabErrors, 'Aucun changement effectué.');
+                    array_push($this->tabErrors, $this->getTranslator()->trans('Aucun changement effectué', array(), 'Modules.OptimizMeForPrestashop') );
                 }
             }
         }
@@ -291,14 +294,14 @@ class OptimizMeActions
      */
     public function setProductSlug($idPost, $objData){
         if ($idPost == ''){
-            array_push($this->tabErrors, 'Produit non trouvé.');
+            array_push($this->tabErrors, $this->getTranslator()->trans('Produit non trouvé.', array(), 'Modules.OptimizMeForPrestashop'));
         }
         elseif (!isset($objData->id_lang) || !is_numeric($objData->id_lang)){
-            array_push($this->tabErrors, 'Lang not set.');
+            array_push($this->tabErrors, $this->getTranslator()->trans('Langue non définie', array(), 'Modules.OptimizMeForPrestashop'));
         }
         elseif (!isset($objData->new_slug) || $objData->new_slug == ''){
             // need more data
-            array_push($this->tabErrors, 'Veuillez saisir le slug');
+            array_push($this->tabErrors, $this->getTranslator()->trans('Veuillez saisir le slug', array(), 'Modules.OptimizMeForPrestashop'));
         }
         else
         {
@@ -317,11 +320,11 @@ class OptimizMeActions
                 $newURL = $link->getProductLink($product, null, null, null, $objData->id_lang);
 
                 $this->returnAjax['url'] = OptMeUtils::getProductUrl($idPost, $objData->id_lang);
-                $this->returnAjax['message'] = 'Slug changé avec succès';
+                $this->returnAjax['message'] = $this->getTranslator()->trans('Slug changé avec succès', array(), 'Modules.OptimizMeForPrestashop');
                 $this->returnAjax['new_slug'] = $slugPropre;
 
             } catch (Exception $e) {
-                array_push($this->tabErrors, "Erreur lors de l'enregistrement du slug : ". $e->getMessage());
+                array_push($this->tabErrors, $this->getTranslator()->trans("Erreur lors de l'enregistrement du slug : ", array(), 'Modules.OptimizMeForPrestashop') . $e->getMessage());
             }
 
             // add redirection from old url to new url
@@ -330,13 +333,16 @@ class OptimizMeActions
                 $objRedirect->addRedirection($previousURL, $newURL);
             }
             catch (Exception $e){
-                $this->returnAjax['message'] = 'Error adding redirection';
+                $this->returnAjax['message'] = $this->getTranslator()->trans("Erreur lors de l'ajout de la redirection", array(), 'Modules.OptimizMeForPrestashop');
             }
-
-
-
         }
     }
+
+
+
+    ////////////////////////////////////////////////
+    //              CATEGORIES
+    ////////////////////////////////////////////////
 
     /**
      * Return content from a post
@@ -364,18 +370,12 @@ class OptimizMeActions
             $this->returnAjax['publish'] = $product->active;
             $this->returnAjax['meta_description'] = $product->meta_description;
             $this->returnAjax['meta_title'] = $product->meta_title;
-            $this->returnAjax['url_canonical'] = 'todo';                                // TODO gestion url canonique
-            $this->returnAjax['noindex'] = 'todo';                                      // TODO gestion noindex
-            $this->returnAjax['nofollow'] = 'todo';                                     // TODO gestion nofollow
+            $this->returnAjax['url_canonical'] = '';                                    // TODO gestion url canonique
+            $this->returnAjax['noindex'] = '';                                          // TODO gestion noindex
+            $this->returnAjax['nofollow'] = '';                                         // TODO gestion nofollow
             $this->returnAjax['blog_public'] = 1;
         }
     }
-
-
-
-    ////////////////////////////////////////////////
-    //              CATEGORIES
-    ////////////////////////////////////////////////
 
     /**
      * Load all categories
@@ -384,6 +384,7 @@ class OptimizMeActions
 
         $tabResults = array();
 
+        /*
         if (isset($objData->id_lang) && is_numeric($objData->id_lang)){
             // langs loaded
             $lang = $objData->id_lang;
@@ -394,6 +395,7 @@ class OptimizMeActions
             $this->returnAjax['langs'] = $tabLangs;
             $lang = $tabLangs[0]['id_lang'];
         }
+        */
 
         // get languages in shop
         if (!isset($objData->id_lang) || !is_numeric($objData->id_lang))        $langCategories = false;
@@ -488,6 +490,11 @@ class OptimizMeActions
         OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'meta_title', $objData->meta_title, $this);
     }
 
+
+    ////////////////////////////////////////////////
+    //              REDIRECTIONS
+    ////////////////////////////////////////////////
+
     /**
      * @param $id
      * @param $objData
@@ -495,11 +502,6 @@ class OptimizMeActions
     public function setCategoryMetaDescription($id, $objData){
         OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'meta_description', $objData->meta_description, $this);
     }
-
-
-    ////////////////////////////////////////////////
-    //              REDIRECTIONS
-    ////////////////////////////////////////////////
 
     /**
      * load list of redirections
@@ -517,26 +519,12 @@ class OptimizMeActions
     public function enableDisableRedirection($objData, $flagDisabled=0){
         if (!isset($objData->id_redirection) || $objData->id_redirection == ''){
             // need more data
-            array_push($this->tabErrors, __('Redirection non trouvée', 'optimizme'));
+            array_push($this->tabErrors, $this->getTranslator()->trans('Redirection non trouvée', array(), 'Modules.OptimizMeForPrestashop') );
         }
         else {
             $redirection = new OptimizMeRedirections();
             if ($flagDisabled == 0)     $redirection->enableRedirection($objData->id_redirection);
             else                        $redirection->disableRedirection($objData->id_redirection);
-        }
-    }
-
-    /**
-     * @param $objData
-     */
-    public function deleteRedirection($objData){
-        if (!isset($objData->id_redirection) || $objData->id_redirection == ''){
-            // need more data
-            array_push($this->tabErrors, __('Redirection non trouvée', 'optimizme'));
-        }
-        else {
-            $redirection = new OptimizMeRedirections();
-            $redirection->deleteRedirection($objData->id_redirection);
         }
     }
 
@@ -546,10 +534,17 @@ class OptimizMeActions
     ////////////////////////////////////////////////
 
     /**
-     * Get list of available languages
+     * @param $objData
      */
-    public function getListLang(){
-        return Language::getLanguages();
+    public function deleteRedirection($objData){
+        if (!isset($objData->id_redirection) || $objData->id_redirection == ''){
+            // need more data
+            array_push($this->tabErrors, $this->getTranslator()->trans('Redirection non trouvée', array(), 'Modules.OptimizMeForPrestashop') );
+        }
+        else {
+            $redirection = new OptimizMeRedirections();
+            $redirection->deleteRedirection($objData->id_redirection);
+        }
     }
 
     /**

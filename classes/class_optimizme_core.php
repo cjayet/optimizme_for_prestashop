@@ -1,12 +1,12 @@
 <?php
+use Firebase\JWT\JWT;
 
 /**
  * Class Optimizme
  */
-class OptimizMeCore {
+class OptimizMeCore extends Module{
 
     public $boolNoAction;
-
 
     /**
      * OptimizMeCore constructor.
@@ -20,10 +20,34 @@ class OptimizMeCore {
      */
     public function rootAction(){
 
+        // ACTIONS
+        $optAction = new OptimizMeActions();
+
         if (isset($_REQUEST['data_optme']) && $_REQUEST['data_optme'] != '')
         {
-            // récupération des données
-            $dataOptimizme = json_decode(($_REQUEST['data_optme']));
+            // is valid request?
+            try {
+                $decoded = JWT::decode($_REQUEST['data_optme'], OPTIMIZME_JWT_SECRET, array('HS256'));
+            }
+            catch (Exception $e){// signature not correct
+                $msg = $this->getTranslator()->trans('Invalid token, security error', array(), 'Modules.OptimizMeForPrestashop');
+                $optAction->setMsgReturn($msg, 'danger');
+                die;
+            }
+
+            if ($decoded == false){
+                // decoded error
+                $msg = $this->getTranslator()->trans('Problem decoding JWT, security error', array(), 'Modules.OptimizMeForPrestashop');
+                $optAction->setMsgReturn($msg, 'danger');
+
+                // ajax to return - encode data
+                $optAction->setDataReturn($optAction->returnAjax);
+                die;
+            }
+
+
+            // JWT ok, go on
+            $dataOptimizme =  $decoded;
 
             // post id
             $elementId = '';
@@ -35,12 +59,10 @@ class OptimizMeCore {
             }
 
 
-            // ACTIONS
-            $optAction = new OptimizMeActions();
             if ($dataOptimizme->action == '')
             {
                 // no action specified
-                $msg = 'Aucune action de définie';
+                $msg = $this->getTranslator()->trans('Aucune action de définie', array(), 'Modules.OptimizMeForPrestashop');
                 $optAction->setMsgReturn($msg, 'danger');
             }
             else
@@ -55,8 +77,6 @@ class OptimizMeCore {
                     case 'set_post_metadescription' :       $optAction->setMetaDescription($elementId, $dataOptimizme); break;
                     case 'set_post_metatitle' :             $optAction->setMetaTitle($elementId, $dataOptimizme); break;
                     case 'set_post_slug' :                  $optAction->setProductSlug($elementId, $dataOptimizme); break;
-                    //case 'set_post_canonicalurl' :        $optAction->setCanonicalUrl($elementId, $dataOptimizme); break;
-                    //case 'set_post_metarobots' :          $optAction->setMetaRobots($elementId, $dataOptimizme); break;
                     case 'set_post_status' :                $optAction->setPostStatus($elementId, $dataOptimizme); break;
                     case 'set_post_imgattributes' :         $optAction->setAttributesTag($elementId, $dataOptimizme, 'img'); break;
                     case 'set_post_hrefattributes' :        $optAction->setAttributesTag($elementId, $dataOptimizme, 'a'); break;
@@ -69,9 +89,7 @@ class OptimizMeCore {
                     // load content
                     case 'load_posts_pages':                $optAction->loadPostsPages($dataOptimizme); break;
                     case 'load_post_content' :              $optAction->loadPostContent($elementId, $dataOptimizme); break;
-                    //case 'load_lorem_ipsum':              $optAction->loadLoremIpsum(); break;
                     case 'load_redirections':               $optAction->loadRedirections(); break;
-
 
                     // categories
                     case 'load_categories':                 $optAction->loadCategories($dataOptimizme); break;
@@ -90,7 +108,8 @@ class OptimizMeCore {
                 if ($this->boolNoAction == 1)
                 {
                     // no action done
-                    $msg = 'Aucune action trouvée.';
+                    $msg = $this->getTranslator()->trans('Aucune action trouvée', array(), 'Modules.OptimizMeForPrestashop');
+
                     $optAction->setMsgReturn($msg, 'danger');
                 }
                 else
@@ -99,7 +118,7 @@ class OptimizMeCore {
                     if (is_array($optAction->tabErrors) && count($optAction->tabErrors) > 0)
                     {
                         $optAction->returnResult['result'] = 'danger';
-                        $msg = 'Une ou plusieurs erreurs ont été levées : ';
+                        $msg = $this->getTranslator()->trans('Une ou plusieurs erreurs ont été levées : ', array(), 'Modules.OptimizMeForPrestashop');
                         $msg .= OptMeUtils::getListMessages($optAction->tabErrors, 1);
                         $optAction->setMsgReturn($msg, 'danger');
                     }
@@ -111,13 +130,12 @@ class OptimizMeCore {
                     else
                     {
                         // no error, OK !
-                        $msg = 'Modification effectuée avec succès.';
+                        $msg = $this->getTranslator()->trans('Modification effectuée avec succès.', array(), 'Modules.OptimizMeForPrestashop');
                         $msg .= OptMeUtils::getListMessages($optAction->tabSuccess);
                         $optAction->setMsgReturn($msg);
                     }
                 }
             }
-
 
             // stop script - no need to go further
             die;

@@ -8,11 +8,12 @@
 if (!defined('_PS_VERSION_'))
     exit;
 
+require_once ('vendor/autoload.php');
 
-/**
- * Load all required files
- */
+// JWT secret
+define('OPTIMIZME_JWT_SECRET', '123456789');       // TODO dynamique
 
+// Load all required files
 $tabFoldersAutoload = array('classes');
 foreach ($tabFoldersAutoload as $folder){
     foreach (glob(dirname(__FILE__) ."/". $folder ."/*.php") as $filename){
@@ -20,6 +21,9 @@ foreach ($tabFoldersAutoload as $folder){
     }
 }
 
+/**
+ * Class OptimizmeForPrestashop
+ */
 class OptimizmeForPrestashop extends Module
 {
     /**
@@ -54,15 +58,6 @@ class OptimizmeForPrestashop extends Module
 		/////////////////////////////////////
 
 		$optMeRedirect = new OptimizMeRedirections();
-
-
-
-		/////////////////////////////////////////
-		// FRONT-OFFICE
-		//  - add meta description if necessary
-		/////////////////////////////////////////
-
-		//$optFo = new OptimizMeFO();
 
     }
 
@@ -104,6 +99,9 @@ class OptimizmeForPrestashop extends Module
     }
 
 
+    /**
+     * @param $params
+     */
     public function hookHeader($params)
     {
         // css
