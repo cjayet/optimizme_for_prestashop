@@ -11,7 +11,8 @@ if (!defined('_PS_VERSION_'))
 require_once ('vendor/autoload.php');
 
 // JWT secret
-define('OPTIMIZME_JWT_SECRET', '123456789');       // TODO dynamique
+define('OPTIMIZME_JWT_SECRET', Configuration::get('OPTIMIZME_JWT_SECRET'));
+
 
 // Load all required files
 $tabFoldersAutoload = array('classes');
@@ -20,6 +21,7 @@ foreach ($tabFoldersAutoload as $folder){
         require_once($filename);
     }
 }
+
 
 /**
  * Class OptimizmeForPrestashop

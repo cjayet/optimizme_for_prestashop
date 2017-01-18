@@ -12,6 +12,7 @@ class OptMeUtils
      * @param $s
      */
     public static function nice($s){
+        header("Access-Control-Allow-Origin: *");
         echo '<pre>';print_r($s);echo'</pre>';
     }
 
@@ -255,8 +256,6 @@ class OptMeUtils
         }
     }
 
-
-
     /**
      * Return permalink for a product
      * @param $idProduct
@@ -268,7 +267,6 @@ class OptMeUtils
         $url = $link->getProductLink($product, null, null, null, $idLang);
         return $url;
     }
-
 
     /**
      * @param $idElement
@@ -322,5 +320,39 @@ class OptMeUtils
                 return false;
             }
         }
+    }
+
+    /**
+     * @param $email
+     * @return array
+     */
+    public static function getEmployeeByEmail($email){
+        return Db::getInstance()->getRow('
+			SELECT `id_employee`, `firstname`, `lastname`, `passwd`
+			FROM `'._DB_PREFIX_.'employee`
+			 WHERE `active` = 1
+			  AND `email`="'. $email .'"
+			ORDER BY `lastname` ASC
+		');
+    }
+
+    /**
+     * @param $password
+     * @param $hash
+     * @return bool
+     */
+    public static function checkPasswordHash($password, $hash){
+        $crypto = PrestaShop\PrestaShop\Adapter\ServiceLocator::get('\\PrestaShop\\PrestaShop\\Core\\Crypto\\Hashing');
+        if ($crypto->checkHash($password, $hash))       return true;
+        else                                            return false;
+    }
+
+    /**
+     * @param int $length
+     * @return string
+     */
+    public static function generateKeyForJwt($length=64){
+        $key = substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length/strlen($x)) )),1,$length);
+        return $key;
     }
 }

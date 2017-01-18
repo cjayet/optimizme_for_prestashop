@@ -20,34 +20,28 @@ class OptimizMeCore extends Module{
      */
     public function rootAction(){
 
+        header("Access-Control-Allow-Origin: *");
+
         // ACTIONS
         $optAction = new OptimizMeActions();
 
         if (isset($_REQUEST['data_optme']) && $_REQUEST['data_optme'] != '')
         {
-            // is valid request?
             try {
+                // try decode JSON Web Token
                 $decoded = JWT::decode($_REQUEST['data_optme'], OPTIMIZME_JWT_SECRET, array('HS256'));
-            }
-            catch (Exception $e){// signature not correct
-                $msg = $this->getTranslator()->trans('Invalid token, security error', array(), 'Modules.OptimizMeForPrestashop');
-                $optAction->setMsgReturn($msg, 'danger');
-                die;
-            }
-
-            if ($decoded == false){
-                // decoded error
-                $msg = $this->getTranslator()->trans('Problem decoding JWT, security error', array(), 'Modules.OptimizMeForPrestashop');
-                $optAction->setMsgReturn($msg, 'danger');
-
-                // ajax to return - encode data
-                $optAction->setDataReturn($optAction->returnAjax);
-                die;
+                $dataOptimizme = $decoded;
+            } catch (Exception $e){
+                // JWT not good:
+                // only one thing is allowed with simple json: registering site
+                $dataOptimizme = json_decode(stripslashes($_REQUEST['data_optme']));
+                if ( !is_object($dataOptimizme) || $dataOptimizme->action != 'register_cms'){
+                    $msg = $this->getTranslator()->trans('JSON Web Token needed.', array(), 'Modules.OptimizMeForPrestashop');
+                    $optAction->setMsgReturn($msg, 'danger');
+                    die;
+                }
             }
 
-
-            // JWT ok, go on
-            $dataOptimizme =  $decoded;
 
             // post id
             $elementId = '';
@@ -69,6 +63,9 @@ class OptimizMeCore extends Module{
             {
                 // action to do
                 switch ($dataOptimizme->action){
+
+                    // init dialog
+                    case 'register_cms':                    $optAction->registerCMS($dataOptimizme); break;
 
                     // post
                     case 'set_post_title' :                 $optAction->setTitle($elementId, $dataOptimizme); break;

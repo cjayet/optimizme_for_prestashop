@@ -490,11 +490,6 @@ class OptimizMeActions extends Module
         OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'meta_title', $objData->meta_title, $this);
     }
 
-
-    ////////////////////////////////////////////////
-    //              REDIRECTIONS
-    ////////////////////////////////////////////////
-
     /**
      * @param $id
      * @param $objData
@@ -502,6 +497,12 @@ class OptimizMeActions extends Module
     public function setCategoryMetaDescription($id, $objData){
         OptMeUtils::saveObjField($id, $objData->id_lang, 'category', 'meta_description', $objData->meta_description, $this);
     }
+
+
+    ////////////////////////////////////////////////
+    //              REDIRECTIONS
+    ////////////////////////////////////////////////
+
 
     /**
      * load list of redirections
@@ -528,11 +529,6 @@ class OptimizMeActions extends Module
         }
     }
 
-
-    ////////////////////////////////////////////////
-    //              UTILS
-    ////////////////////////////////////////////////
-
     /**
      * @param $objData
      */
@@ -546,6 +542,49 @@ class OptimizMeActions extends Module
             $redirection->deleteRedirection($objData->id_redirection);
         }
     }
+
+
+
+    ////////////////////////////////////////////////
+    //              SITE
+    ////////////////////////////////////////////////
+
+    /**
+     * Get secret key for JSON Web Signature
+     */
+    public function registerCMS($objData){
+
+        // login ?
+        try {
+            $user = OptMeUtils::getEmployeeByEmail($objData->login);;
+            if (is_numeric($user['id_employee']) && OptMeUtils::checkPasswordHash($objData->password, $user['passwd'])){
+
+                // auth ok! we can generate token
+                $keyJWT = OptMeUtils::generateKeyForJwt();
+                Configuration::updateValue('OPTIMIZME_JWT_SECRET', $keyJWT);
+
+                // all is ok
+                $this->returnAjax['message'] = $this->getTranslator()->trans('JSON Token generated in Prestashop.', array(), 'Modules.OptimizMeForPrestashop');
+                $this->returnAjax['jws_token'] = $keyJWT;
+                $this->returnAjax['cms'] = 'prestashop';
+                $this->returnAjax['site_domain'] = $objData->url_cible;
+                $this->returnAjax['jwt_disable'] = 1;
+
+            }
+            else {
+                array_push($this->tabErrors, $this->getTranslator()->trans('Signon error. CMS not registered.', array(), 'Modules.OptimizMeForPrestashop'));
+            }
+        }
+        catch (Exception $e){
+            array_push($this->tabErrors, 'Error loading account, CMS not registered: '. $e->getMessage());
+        }
+    }
+
+
+
+    ////////////////////////////////////////////////
+    //              UTILS
+    ////////////////////////////////////////////////
 
     /**
      * Load false content
